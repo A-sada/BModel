@@ -2,11 +2,10 @@ import random
 
 import math
 from Vehicle_Task import Vehicle,Task
+from VRPTW_functions import euclidean_distance
 
 
-# タスク間または車両とタスク間のユークリッド距離を計算する関数
-def euclidean_distance(task1, task2):
-    return math.sqrt((task1.x_coordinate - task2.x_coordinate)**2 + (task1.y_coordinate - task2.y_coordinate)**2)
+
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 
