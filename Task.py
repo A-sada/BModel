@@ -20,3 +20,21 @@ class Nego:
         self.id = id  # タスク（顧客）のID
         self.vehicleA = vehicleA
         self.vehicleB = vehicleB     
+
+class Agree:
+    def __init__(self, vehicleA, vehicleB, TaskA,TaskB) -> None:
+        self.vehicleA = vehicleA
+        self.vehicleB = vehicleB
+        #車両Aが，捨てるタスク
+        self.taskA = TaskA
+        #車両Bが，捨てるタスク
+        self.taskB = TaskB
+        pass
+
+class bull_board:
+    def __init__(self,start,end,slacktime,stay_area) -> None:
+        self.start = start
+        self.end = end
+        self.slacktime = slacktime
+        self.stay_area = stay_area
+        

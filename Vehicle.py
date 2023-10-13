@@ -1,11 +1,12 @@
 from Task import Task,Offer,Nego
 # 車両（エージェント）クラス
-from negmas import AspirationNegotiator, ResponseType
+from negmas import AspirationNegotiator, ResponseType,SAONegotiator
+
 from negmas import SAOMechanism, AspirationNegotiator, Issue, ResponseType
 from typing import Optional, List
 from VRPTW_functions import euclidean_distance
 import copy 
-class Vehicle(AspirationNegotiator):
+class Vehicle(SAONegotiator):
     def __init__(self, id, max_weight):
         super().__init__()
         self.id = id  # 車両のID
@@ -115,4 +116,67 @@ class Vehicle(AspirationNegotiator):
     def end_negotiation(self):
         self.offer_flag = 0
         return
+    
+    def sign_contract(self,partner,taskA,taskB):
+
+        return True
+
+    def pop(self,task):
+        for i, obj in enumerate(self.tasks):
+            if obj.id == task.id:
+                del self.tasks[i]
+                return True
+        return False
+    
+    def add(self,new_task):
+        # 車両の開始位置から新しいタスクまでの距離を計算
+        start_task = Task(0, 0, 0, 0, 0, 0, 0)  # 仮の開始位置
+        travel_time_from_start = euclidean_distance(start_task, new_task)
+        if travel_time_from_start <= new_task.due_date :
+            if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, self.tasks[0]) <= self.tasks[0].due_date: 
+                self.tasks.insert(0,new_task)
+                self.current_weight += new_task.weight
+                return True
+
+        # 各タスク間での新しいタスクの挿入を試みる
+        for i in range(len(self.tasks) - 1):
+            current_task = self.tasks[i]
+            next_task = self.tasks[i + 1]
+
+            # 現在のタスクの終了時間を計算
+            current_task_end_time = current_task.ready_time + current_task.service_time
+
+            # 新しいタスクへの移動に必要な時間を計算
+            travel_time_to_new_task = euclidean_distance(current_task, new_task)
+
+            # 新しいタスクのサービス終了時間を計算
+            new_task_end_time = current_task_end_time + travel_time_to_new_task + new_task.service_time
+
+            # 次のタスクへの移動に必要な時間を計算
+            travel_time_to_next_task = euclidean_distance(new_task, next_task)
+
+            # 次のタスクの開始時間を計算
+            next_task_start_time = new_task_end_time + travel_time_to_next_task
+
+            # 新しいタスクがdue_date前に終了し、次のタスクが時間内に開始できるかどうかを確認
+            if current_task_end_time + travel_time_to_new_task <= new_task.due_date and next_task_start_time <= next_task.due_date:
+                self.tasks.insert(i+1,new_task)
+                self.current_weight += new_task.weight
+                return True
+
+        # すべてのタスクの後に新しいタスクを追加する場合の判定
+        last_task = self.tasks[-1]
+        last_task_end_time = last_task.ready_time + last_task.service_time
+        travel_time_to_new_task = euclidean_distance(last_task, new_task)
+        if last_task_end_time + travel_time_to_new_task <= new_task.due_date:
+            self.tasks.append(new_task)
+            self.current_weight += new_task.weight
+            return True
+        return False
+    
+    def bulletin_update(self):
+        return 
+    
+            
+        
 
