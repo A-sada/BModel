@@ -5,7 +5,9 @@ from negmas import AspirationNegotiator, ResponseType,SAONegotiator
 from negmas import SAOMechanism, AspirationNegotiator, Issue, ResponseType
 from typing import Optional, List
 from VRPTW_functions import euclidean_distance
-import copy 
+import copy
+import math
+
 class Vehicle(SAONegotiator):
     def __init__(self, id, max_weight):
         super().__init__()
@@ -177,6 +179,27 @@ class Vehicle(SAONegotiator):
     def bulletin_update(self):
         return 
     
+    def calculate_total_cost(distance_cost, slack_time, late_penalty, alpha=1, beta=1):
+        return distance_cost + alpha * slack_time + beta * late_penalty
+
+    def least_cost_time_sensitive_insertion(self,route, task_to_insert, alpha=1, beta=1):
+        min_cost = float('inf')
+        best_position = None
+        
+        for i in range(1, len(route)):
+            distance_cost = euclidean_distance(route[i-1], task_to_insert) + euclidean_distance(task_to_insert, route[i]) - euclidean_distance(route[i-1], route[i])
+
+            # Calculate slack time and late penalty (for simplicity, set to 0 here; you should implement this part)
+            slack_time = 0
+            late_penalty = 0
+
+            total_cost = self.calculate_total_cost(distance_cost, slack_time, late_penalty, alpha, beta)
             
+            if total_cost < min_cost:
+                min_cost = total_cost
+                best_position = i
+                
+        if best_position is not None:
+            route.insert(best_position, task_to_insert)
         
 
