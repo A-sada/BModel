@@ -179,7 +179,7 @@ class Vehicle(SAONegotiator):
     def bulletin_update(self):
         return 
     
-    def calculate_total_cost(distance_cost, slack_time, late_penalty, alpha=1, beta=1):
+    def calculate_total_cost(distance_cost, slack_time, late_penalty, alpha=1, beta=0):
         return distance_cost + alpha * slack_time + beta * late_penalty
 
     def least_cost_time_sensitive_insertion(self,route, task_to_insert, alpha=1, beta=1):
