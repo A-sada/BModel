@@ -6,6 +6,7 @@ class Task:
         self.weight = weight  # 荷物の重量またはサイズ
         self.ready_time = ready_time  # 配送可能な最早時間
         self.due_date = due_date  # 配送締切時間
+        self.arrival = 0
         self.service_time = service_time  # サービスにかかる時間
 
 class Offer:

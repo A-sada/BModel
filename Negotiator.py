@@ -4,7 +4,9 @@ from negmas.utilities import UtilityFunction
 from negmas.outcomes import Outcome
 
 def Nego1(vehicleA,vehicleB):
-    outcomes = [{"taskA": taskA, "taskB": taskB} for taskA in vehicleA.tasks for taskB in vehicleB.tasks]
+    ListA = []
+    outcomes = [{"taskA": taskA, "taskB": taskB} for taskA in vehicleA.tasks for taskB in vehicleB.tasks + [None]]
+
     mechanism = SAOMechanism(
         outcomes=outcomes,
         n_steps=10

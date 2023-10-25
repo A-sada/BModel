@@ -89,13 +89,13 @@ for neg in negotiation_list:
     neg.vehicleA.start_negotiation(neg.id)
     result=Nego1(neg.vehicleA,neg.vehicleB)
     # 交渉が成功した場合には合意内容をリストに追加
+    print(result)
     if result.agreement != None:
         agreement = result.agreement
         taskA = agreement.get('taskA')
         taskB = agreement.get('taskB')        
         agreements.append(Agree(neg.vehicleA,neg.vehicleB,taskA,taskB))
     neg.vehicleA.end_negotiation()
-
 
 signed = []
 #署名の実施
@@ -105,6 +105,8 @@ for agr in agreements:
     if AgentA.sign_contract(AgentB,agr.taskA,agr.taskB) == True:
         if AgentB.sign_contract(AgentA,agr.taskB,agr.taskA) == True:
             signed.append(agr)
+
+print (signed)     
 for cnt in signed:
     vehicleA = cnt.vehicleA
     vehicleB = cnt.vehicleB
@@ -134,3 +136,14 @@ for car in vehicles:
 
 for car in vehicles:
     car.step()
+
+
+i=0
+filename = os.path.join(directory_name, f"Step-1.txt") 
+with open(filename, 'w') as f:
+    for vehicle in vehicles:
+        task_ids = [task.id for task in vehicle.tasks]
+        # ファイル名を生成
+        f.write(f"Vehicle {vehicle.id} has tasks {task_ids} with total weight {vehicle.current_weight}.\n")
+        if len(task_ids) == 1:
+            count += 1
