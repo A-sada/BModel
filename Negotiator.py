@@ -12,7 +12,7 @@ def Nego1(vehicleA,vehicleB):
         n_steps=10
     )
     mechanism.add(vehicleA)
-    mechanism.add(vehicleB)
+    print(mechanism.add(vehicleB))
     result = mechanism.run()
     return result
 

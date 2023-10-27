@@ -86,10 +86,12 @@ for lst in Offer_list:
 
 agreements=[]
 for neg in negotiation_list:
+    print(neg.vehicleA)
+    print(neg.vehicleB)
     neg.vehicleA.start_negotiation(neg.id)
     result=Nego1(neg.vehicleA,neg.vehicleB)
-    # 交渉が成功した場合には合意内容をリストに追加
     print(result)
+    # 交渉が成功した場合には合意内容をリストに追加
     if result.agreement != None:
         agreement = result.agreement
         taskA = agreement.get('taskA')
@@ -106,7 +108,6 @@ for agr in agreements:
         if AgentB.sign_contract(AgentA,agr.taskB,agr.taskA) == True:
             signed.append(agr)
 
-print (signed)     
 for cnt in signed:
     vehicleA = cnt.vehicleA
     vehicleB = cnt.vehicleB

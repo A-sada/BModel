@@ -9,7 +9,7 @@ import copy
 import math
 from Rout_Pac import rout_pac
 import random
-class Vehicle_Base():
+class Vehicle_Base(SAONegotiator):
     def __init__(self, id, max_weight):
         super().__init__()
         self.id = id  # 車両のID
@@ -17,7 +17,7 @@ class Vehicle_Base():
         #self.y_coordinate = y_coordinate  # 現在地のy座標
         self.max_weight = max_weight  # 最大積載量
         self.current_weight = 0  # 現在の積載量
-        self.propose_task : Task
+        self.propose_task = 512
         self.tasks = []  # 割り当てられたタスクのリスト
         self.offer_nego_list=[] #自分の交渉リスト・自分が提案側ならここにスタート時の交渉内容を保存する
         self.next_nego={} #交渉IDと自分の交渉リストインデックスと対応
@@ -39,7 +39,28 @@ class Vehicle_Base():
     
     def make_propose(self):
         return {"taskA": self.propose_task, "taskB": self.tasks[random.randint(0,len(self.tasks - 1))]}
-  
+    
+    def propose(self, state):
+        # タスク交換の提案を行うロジック
+        if self.offer_flag == 1:
+            return {"taskA": self.propose_task, "taskB": None}  # 例として、タスクリストの最初の2つのタスクを提案
+        else:
+            return self.make_propose
+    
+
+    def respond(self, state, offer: "Outcome"):
+        # 提案されたタスク交換を評価するロジック
+        if self.offer_flag ==1: #自分が提案者側
+            if self.accept_or_reject(offer) == True:
+             #判定がTrueなら受け入れる
+                return ResponseType.ACCEPT_OFFER
+            else:
+                return ResponseType.REJECT_OFFER
+        else:
+            self.propose_task = offer.get("taskA")
+            return ResponseType.REJECT_OFFER
+
+    
     #タスクの挿入が可能かチェック->true or false
     def check_task(self,new_task):
         # 車両の開始位置から新しいタスクまでの距離を計算
