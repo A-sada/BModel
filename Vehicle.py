@@ -1,4 +1,4 @@
-from Task import Task,Offer,Nego
+from classes import Task,Offer,Nego
 # 車両（エージェント）クラス
 from negmas import AspirationNegotiator, ResponseType,SAONegotiator
 
@@ -7,7 +7,7 @@ from typing import Optional, List
 from VRPTW_functions import euclidean_distance
 import copy
 import math
-from Rout_Pac import rout_pac
+
 import random
 class Vehicle_Base():
     def __init__(self, id, max_weight):
@@ -81,19 +81,21 @@ class Vehicle_Base():
             return True
         return False
     
-
+    #交渉の提案を行う-> 希望する交渉のリストを送信
     def offer_on_negotiation(self,run_cars,offer_id):
         #list_return = copy.deepcopy(self.offer_nego_list)
-        list_return =[]
+        #list_return =[]
         ofe=Offer(offer_id,self.id,run_cars[0].id,self.tasks[0])
         offer_id += 1
         self.offer_nego_list.append(ofe)
-        list_return = copy.deepcopy(self.offer_nego_list)
+        #list_return = copy.deepcopy(self.offer_nego_list)
         return self.offer_nego_list
     
+    #提案された交渉について応じるかどうかを判断　->応じるならTrue,応じないならFalse
     def check_offer(self,task):
         return self.check_task(task)
     
+    #リストからIDの一致する要素のインデックスを返す
     def find_index(self,obj_list, target_id):
         index = 0
         for obj in obj_list:
@@ -102,10 +104,12 @@ class Vehicle_Base():
             index += 1
         return None
     
+    #提案した交渉が相手に受け入れられたら呼び出される．
     def accept_offer(self,offer,neg_id):
         if offer not in self.offer_nego_list:
             print("error- vehicleA have not task")
             return False
+        #実施する交渉のリスト（自分が提案したタスクのみ）
         self.next_nego[neg_id]=offer
         return
 
@@ -116,16 +120,21 @@ class Vehicle_Base():
             self.propose_task = neg_task
             #propse_taskはタスクリストのインデックス
             self.offer_flag = 1
+            #自分が提案した交渉ならフラグがたつ
         return
     
+
+    #交渉終了時に呼び出される
     def end_negotiation(self):
         self.offer_flag = 0
         return
     
+    #署名戦略
     def sign_contract(self,partner,taskA,taskB):
 
         return True
-
+    
+    #ルートから該当するタスクを削除
     def pop(self,task):
         for i, obj in enumerate(self.tasks):
             if obj.id == task.id:
@@ -133,6 +142,7 @@ class Vehicle_Base():
                 return True
         return False
     
+    #とにかく挿入可能な場所に挿入する
     def add_old(self,new_task):
         # 車両の開始位置から新しいタスクまでの距離を計算
         start_task = Task(0, 0, 0, 0, 0, 0, 0)  # 仮の開始位置
@@ -179,12 +189,15 @@ class Vehicle_Base():
             return True
         return False
     
+    #コストが最小となる場所に挿入する
     def add(self, new_task):
         return self.least_cost_time_sensitive_insertion(self.tasks, new_task, 1)
     
+    #掲示板の更新
     def bulletin_update(self):
         return 
     
+    #スラックタイムの計算
     def calculate_slack_time(self, route, position_to_insert, task_to_insert):
         total_time = 0  # total time spent so far in the route
         slack_time = 0

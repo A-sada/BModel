@@ -5,6 +5,7 @@ from negmas.preferences.preferences import Preferences
 from negmas.situated import Agent
 from Vehicle import Vehicle_Base
 class negotiator(SAONegotiator):
-    def __init__(self, owner : Vehicle_Base  ,rout : list):
+    def __init__(self, owner : Vehicle_Base  ,List : list,):
         self.owner = owner
-        self.rout = 
+        self.offer_flag = 0 #自分がタスク交換を希望した側かを判断
+        self.Negotiate_list = List

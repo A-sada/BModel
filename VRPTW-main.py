@@ -1,17 +1,32 @@
 
-from VRPTW_BASE import assign_tasks_to_vehicles_with_insert,read_task
+from initialsolution import assign_tasks_to_vehicles_with_insert,read_task
 from Vehicle import Vehicle
-from Task import Task,Offer,Nego,Agree
+from classes import Task,Offer,Nego,Agree,Balletin
 import random
 from negmas import SAOMechanism, AspirationNegotiator, Issue, ResponseType,SAOState
 from typing import Optional, List
 from datetime import datetime
 from Negotiator import Nego1
 
+import pandas as pd
 run_num = 0
 tasks = []  # タスクを保存するためのリスト
 vehicles = []
 no_runs=[]
+#時間に関する掲示板
+b_board = pd.DataFrame({
+    'id':[],
+    'slack time':[],
+    'departure_time': [],
+    'return_time': []
+})
+#滞在エリアに関する掲示板
+stay_areas_bb = pd.DataFrame({
+    'vehicle_id': [],
+    'time_slot': [],
+    'area': []
+})
+bulletin_board = Balletin(False,b_board,stay_areas_bb)
 # taskのリスト化
 import os
 # ディレクトリの名前を指定

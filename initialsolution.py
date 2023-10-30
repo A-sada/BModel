@@ -2,7 +2,7 @@ import random
 
 import math
 from Vehicle import Vehicle
-from Task import Task
+from classes import Task
 from VRPTW_functions import euclidean_distance
 
 

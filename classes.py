@@ -32,10 +32,21 @@ class Agree:
         self.taskB = TaskB
         pass
 
-class bull_board:
-    def __init__(self,start,end,slacktime,stay_area) -> None:
-        self.start = start
-        self.end = end
-        self.slacktime = slacktime
-        self.stay_area = stay_area
+class rout_pac:
+    def __init__(self,id,arrival_fast,arrival_due) -> None:
+        self.id = id
+        self.arrival_fast = arrival_fast
+        self.arrival_due = arrival_due
+        self.slack_time = 0
+import pandas as pd
+
+class Balletin:
+    def __init__(self,using :bool ,time_board : pd, area_board : pd ) -> None:
+        
+        self.use = using #掲示板を利用中のエージェントの有無の判断
+
+        self.time_board = time_board
+
+        self.area_board = area_board
+
         

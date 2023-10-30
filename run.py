@@ -1,4 +1,4 @@
-from Task import Task
+from classes import Task
 from Vehicle_Base import Vehicle_Base as Vehicle
 tasks = [
     Task(id=1, x_coordinate=0, y_coordinate=0, weight=10, ready_time=0, due_date=10, service_time=2),
