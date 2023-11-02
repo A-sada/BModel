@@ -10,7 +10,7 @@ from VRPTW_functions import euclidean_distance
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 
-def is_task_assignable_with_or_tools(vehicle, new_task):
+def is_task_assignable_with_or_tools(vehicle, new_task,dep_x,dep_y):
     global max_weight
     # タスクがまだ割り当てられていない場合や、車両にまだタスクが割り当てられていない場合
     if len(vehicle.tasks) > 4:
@@ -19,7 +19,7 @@ def is_task_assignable_with_or_tools(vehicle, new_task):
         return False
     
     # 車両の開始位置から新しいタスクまでの距離を計算
-    start_task = Task(0, 0, 0, 0, 0, 0, 0)  # 仮の開始位置
+    start_task = Task(0, dep_x, dep_y, 0, 0, 0, 0)  # 仮の開始位置
     travel_time_from_start = euclidean_distance(start_task, new_task)
     if travel_time_from_start <= new_task.due_date :
         if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, vehicle.tasks[0]) <= vehicle.tasks[0].due_date: 
@@ -58,9 +58,9 @@ def is_task_assignable_with_or_tools(vehicle, new_task):
 
     return False
 
-def task_go(vehicle, new_task):
+def task_go(vehicle, new_task,dep_x, dep_y):
     # 車両の開始位置から新しいタスクまでの距離を計算
-    start_task = Task(0, 0, 0, 0, 0, 0, 0)  # 仮の開始位置
+    start_task = Task(0, dep_x, dep_y, 0, 0, 0, 0)  # 仮の開始位置
     travel_time_from_start = euclidean_distance(start_task, new_task)
     if travel_time_from_start <= new_task.due_date :
         if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, vehicle.tasks[0]) <= vehicle.tasks[0].due_date: 
@@ -102,11 +102,11 @@ def task_go(vehicle, new_task):
        vehicle.tasks.append(new_task)
        vehicle.current_weight += new_task.weight
 
-def assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num):
+def assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y):
     # global run_num
     for task in tasks:
         if run_num == 0:
-            new_vehicle = Vehicle(run_num, max_weight)
+            new_vehicle = Vehicle(run_num, max_weight,dep_x, dep_y)
             new_vehicle.tasks.append(task)
             new_vehicle.current_weight += task.weight
             vehicles.append(new_vehicle)
@@ -114,50 +114,61 @@ def assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num):
         else:
             apt_cars=[]
             for car in vehicles:
-                if is_task_assignable_with_or_tools(car, task) == True:
+                if is_task_assignable_with_or_tools(car, task,dep_x, dep_y) == True:
                     apt_cars.append(car)
             if len(apt_cars) == 0:
-                new_vehicle = Vehicle(run_num, max_weight)
+                new_vehicle = Vehicle(run_num, max_weight,dep_x, dep_y)
                 new_vehicle.tasks.append(task)
                 new_vehicle.current_weight += task.weight
                 vehicles.append(new_vehicle)
                 run_num += 1
             elif len(apt_cars)==1:
-                task_go(apt_cars[0],task)
+                task_go(apt_cars[0],task,dep_x,dep_y)
             else:
                 rad = random.randint(0, len(apt_cars)-1)
-                task_go(apt_cars[rad],task)
+                task_go(apt_cars[rad],task,dep_x,dep_y)
 
 
-def read_task(filename,tasks):
+def read_task(filename, tasks):
     global max_weight
+    max_x_coordinate = float('-inf')  # 初期値を負の無限大に設定
+    max_y_coordinate = float('-inf')  # 初期値を負の無限大に設定
+    max_due_date = float('-inf')  # 初期値を負の無限大に設定
+
     with open(filename, "r") as file:
-        current_section="no"
+        current_section = "no"
         for line in file:
-            line = line.strip()  # 末尾の空白を削除
-            if not line:  # 空行をスキップ
+            line = line.strip()
+            if not line:
                 continue
-            # セクションの切り替え
             if line == "VEHICLE":
                 current_section = "VEHICLE"
                 continue
             elif line == "CUSTOMER":
                 current_section = "CUSTOMER"
                 continue
-            
-            # 各セクションに応じてデータを処理
+
             if current_section == "VEHICLE":
                 if "NUMBER" in line:
-                        continue  # ヘッダー行はスキップ 
+                    continue
                 parts = line.split()
-                max_num, max_weight= map(int, parts)
+                max_num, max_weight = map(int, parts)
+
             if current_section == "CUSTOMER":
                 if "CUST NO." in line:
-                    continue  # ヘッダー行はスキップ
+                    continue
                 parts = line.split()
                 id, x_coordinate, y_coordinate, weight, ready_time, due_date, service_time = map(int, parts)
                 task = Task(id, x_coordinate, y_coordinate, weight, ready_time, due_date, service_time)
                 tasks.append(task)
+
+                # 最大値の更新
+                max_x_coordinate = max(max_x_coordinate, x_coordinate)
+                max_y_coordinate = max(max_y_coordinate, y_coordinate)
+                max_due_date = max(max_due_date, due_date)
+
+    return [max(max_x_coordinate, max_y_coordinate), max_due_date]
+
 
 
 class exchange_tasks:

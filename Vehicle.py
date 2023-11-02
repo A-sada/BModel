@@ -1,18 +1,21 @@
-from classes import Task,Offer,Nego
+from classes import Task,Offer,Nego,Balletin
 # 車両（エージェント）クラス
+import pandas as pd
 from negmas import AspirationNegotiator, ResponseType,SAONegotiator
-
+import numpy as np
 from negmas import SAOMechanism, AspirationNegotiator, Issue, ResponseType
 from typing import Optional, List
-from VRPTW_functions import euclidean_distance
+from VRPTW_functions import euclidean_distance,slack_time_list
 import copy
 import math
-
+from balletin_are_search import most_stayed_area_dynamic,update_stay_areas
 import random
-class Vehicle_Base():
-    def __init__(self, id, max_weight):
+class Vehicle:
+    def __init__(self, id, max_weight,dep_x, dep_y):
         super().__init__()
         self.id = id  # 車両のID
+        self.dep_x = dep_x
+        self.dep_y = dep_y
         #self.x_coordinate = x_coordinate  # 現在地のx座標
         #self.y_coordinate = y_coordinate  # 現在地のy座標
         self.max_weight = max_weight  # 最大積載量
@@ -21,10 +24,19 @@ class Vehicle_Base():
         self.tasks = []  # 割り当てられたタスクのリスト
         self.offer_nego_list=[] #自分の交渉リスト・自分が提案側ならここにスタート時の交渉内容を保存する
         self.next_nego={} #交渉IDと自分の交渉リストインデックスと対応
+        self.bulletin_board : Balletin
         self.offer_flag = 0
         self.rout_pacs = []
         self.taskA = 0
+        self.slack_time = []
 
+    #掲示板を取得
+    def set_balletin(self,balletin : Balletin):
+        self.bulletin_board = balletin
+
+    #1日の最初に呼び出される
+    def first_step(self):
+        return
     def step(self):
         self.offer_flag=0
         return
@@ -194,10 +206,25 @@ class Vehicle_Base():
         return self.least_cost_time_sensitive_insertion(self.tasks, new_task, 1)
     
     #掲示板の更新
-    def bulletin_update(self):
+    def bulletin_update(self,X,T,num_zones,n):
+        area = self.bulletin_board.area_board
+        if not (self.bulletin_board.area_board['id'] == self.id).any():
+            new_row = pd.DataFrame({'id': self.id, 'slack_time': [0], 'departure_time': [0], 'return_time': [0]})
+            self.bulletin_board.time_board = pd.concat([self.bulletin_board.time_board, new_row], ignore_index=True)
+        
+        #self.slack_time = slack_time_list(self.tasks,empty_list = list(0 for _ in range(len(self.tasks))))
+        self.bulletin_board.time_board.loc[self.bulletin_board.time_board['id']== self.id, 'slack_time'] = self.calculate_slack_time(self.tasks,100000,None)
+        self.bulletin_board.time_board.loc[self.bulletin_board.time_board['id'] == self.id, ['departure_time', 'return_time']] = [self.tasks[0].due_date - euclidean_distance(Task(0,self.dep_x,self.dep_y,0,0,0,0),self.tasks[0]),self.tasks[-1].due_date + self.tasks[-1].service_time + euclidean_distance(self.tasks[-1],Task(0,self.dep_x,self.dep_y,0,0,0,0))]
+        new_data = most_stayed_area_dynamic(self.tasks, X, T, num_zones, n,self.dep_x,self.dep_y)
+        if not ( self.bulletin_board.area_board['id'] == self.id).any():
+            # 新しい行のインデックスを決定
+            new_index = len( self.bulletin_board.area_board)
+            # 新しい行を追加
+            self.bulletin_board.area_board.loc[new_index] = [self.id] + list(new_data.values())
+        else:
+            update_stay_areas(self.bulletin_board.area_board, self.id , new_data)
         return 
-    
-    #スラックタイムの計算
+    #スラックタイムの計算　挿入なしの
     def calculate_slack_time(self, route, position_to_insert, task_to_insert):
         total_time = 0  # total time spent so far in the route
         slack_time = 0
@@ -206,29 +233,43 @@ class Vehicle_Base():
             task = route[i]
             
             if i == position_to_insert:
-                # Assuming we insert the new task here
+                # ここで新しいタスクを挿入すると仮定
                 total_time += euclidean_distance(route[i-1], task_to_insert)
-                total_time += task_to_insert.service_time
                 
+                # Wait for the task's service to start if necessary
                 slack_time += max(0, task_to_insert.due_date - total_time)
+                #タスク到着時間から，サービス開始期限までを計算　→スラックタイム
+                if total_time < task_to_insert.ready_time:
+                    total_time = task_to_insert.ready_time
                 
+                total_time += task_to_insert.service_time
                 total_time += euclidean_distance(task_to_insert, task)
+                
+                # タスクのサービスが開始するまで必要な場合は待つ
+                if total_time < task.ready_time:
+                    total_time = task.ready_time
+                
                 total_time += task.service_time
                 
             else:
                 if i != 0:
                     total_time += euclidean_distance(route[i-1], task)
+                    slack_time += max(0, task.due_date - total_time)
+                    # Wait for the task's service to start if necessary
+                    if total_time < task.ready_time:
+                        total_time = task.ready_time
+                    
                     total_time += task.service_time
                 else:
-                    distance = euclidean_distance(Task(0,0,0,0,0,0,0), task)
+                    distance = euclidean_distance(Task(0,self.dep_x,self.dep_y,0,0,0,0), task)
                     if distance < task.ready_time:
                         distance = task.ready_time
                     total_time += distance
+                    
                     total_time += task.service_time
-
-            slack_time += max(0, task.due_date - total_time)
             
         return slack_time
+
 
     def least_cost_time_sensitive_insertion(self ,route, new_task, alpha):
         min_cost = float('inf')
@@ -271,6 +312,7 @@ class Vehicle_Base():
                 if min_cost > cost:
                     min_cost = cost
                     best_position = i+1
+
         if best_position != None:
             self.tasks.insert(best_position,new_task)
             return True

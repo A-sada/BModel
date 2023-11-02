@@ -14,5 +14,8 @@ for i in range(4):
     if car.add(tasks[i]) == False:
         print("errow")
         i += -1
-
+import math
 print(car.tasks)
+
+from VRPTW_functions import euclidean_distance
+print(math.sqrt((338- 0)**2 + (142 - 0)**2))
