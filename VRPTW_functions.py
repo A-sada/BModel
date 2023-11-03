@@ -2,7 +2,7 @@ import math
 from classes import Task
 # タスク間または車両とタスク間のユークリッド距離を計算する関数
 def euclidean_distance(task1, task2):
-    return math.sqrt((task1.x_coordinate - task2.x_coordinate)**2 + (task1.y_coordinate - task2.y_coordinate)**2)
+    return (int)(math.sqrt((task1.x_coordinate - task2.x_coordinate)**2 + (task1.y_coordinate - task2.y_coordinate)**2))
 
 def slack_time_list(self, route,slist):
         total_time = 0  # total time spent so far in the route

@@ -214,16 +214,18 @@ class Vehicle:
         
         #self.slack_time = slack_time_list(self.tasks,empty_list = list(0 for _ in range(len(self.tasks))))
         self.bulletin_board.time_board.loc[self.bulletin_board.time_board['id']== self.id, 'slack_time'] = self.calculate_slack_time(self.tasks,100000,None)
-        self.bulletin_board.time_board.loc[self.bulletin_board.time_board['id'] == self.id, ['departure_time', 'return_time']] = [self.tasks[0].due_date - euclidean_distance(Task(0,self.dep_x,self.dep_y,0,0,0,0),self.tasks[0]),self.tasks[-1].due_date + self.tasks[-1].service_time + euclidean_distance(self.tasks[-1],Task(0,self.dep_x,self.dep_y,0,0,0,0))]
+        self.bulletin_board.time_board.loc[self.bulletin_board.time_board['id'] == self.id, ['departure_time', 'return_time']] = [self.tasks[0].ready_time - euclidean_distance(Task(0,self.dep_x,self.dep_y,0,0,0,0),self.tasks[0]),self.tasks[-1].due_date + self.tasks[-1].service_time + euclidean_distance(self.tasks[-1],Task(0,self.dep_x,self.dep_y,0,0,0,0))]
         new_data = most_stayed_area_dynamic(self.tasks, X, T, num_zones, n,self.dep_x,self.dep_y)
         if not ( self.bulletin_board.area_board['id'] == self.id).any():
             # 新しい行のインデックスを決定
-            new_index = len( self.bulletin_board.area_board)
+            new_index = len(self.bulletin_board.area_board)
             # 新しい行を追加
             self.bulletin_board.area_board.loc[new_index] = [self.id] + list(new_data.values())
         else:
             update_stay_areas(self.bulletin_board.area_board, self.id , new_data)
         return 
+    
+
     #スラックタイムの計算　挿入なしの
     def calculate_slack_time(self, route, position_to_insert, task_to_insert):
         total_time = 0  # total time spent so far in the route

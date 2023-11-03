@@ -7,7 +7,7 @@ from negmas import SAOMechanism, AspirationNegotiator, Issue, ResponseType,SAOSt
 from typing import Optional, List
 from datetime import datetime
 from Negotiator import Nego1
-
+import math
 import pandas as pd
 run_num = 0
 tasks = []  # タスクを保存するためのリスト
@@ -16,9 +16,9 @@ no_runs=[]
 #時間に関する掲示板
 b_board = pd.DataFrame({
     'id': pd.Series(dtype='int'),
-    'slack_time': pd.Series(dtype='float'),
-    'departure_time': pd.Series(dtype='float'),
-    'return_time': pd.Series(dtype='float')
+    'slack_time': pd.Series(dtype='int'),
+    'departure_time': pd.Series(dtype='int'),
+    'return_time': pd.Series(dtype='int')
 })
 #滞在エリアに関する掲示板
 # 初期データフレームの作成
@@ -54,7 +54,7 @@ ll=read_task("C1_10_1.txt",tasks)
 max_xy = ll[0]
 max_time = ll[1]
 #n = (int)(max_xy /25)
-n =(int)(len(tasks) / 100)
+n =(int)(math.sqrt((len(tasks) / 10)))
 n_zones = 7
 print(max_xy)
 dep_x = tasks[0].x_coordinate
