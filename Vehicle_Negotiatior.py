@@ -1,11 +1,117 @@
 from negmas import AspirationNegotiator, ResponseType,SAONegotiator
 from negmas.negotiators import Controller
+from negmas.outcomes import Outcome
 from negmas.preferences.base_ufun import BaseUtilityFunction
 from negmas.preferences.preferences import Preferences
+from negmas.sao import SAOState
+from negmas.sao.common import ResponseType
 from negmas.situated import Agent
-from Vehicle import Vehicle_Base
+from VRPTW_functions import euclidean_distance
+from classes import Task
+"""
 class negotiator(SAONegotiator):
-    def __init__(self, owner : Vehicle_Base  ,List : list,):
+    def __init__(self, owner : Vehicle_Base  ,List : list,neg_flag):
         self.owner = owner
         self.offer_flag = 0 #自分がタスク交換を希望した側かを判断
-        self.Negotiate_list = List
+        self.Negotiate_list = List # 交渉に投げるようのリスト，このリストの先頭からタスクを提案していく（自分が交渉時車両B側でのみつかう）
+        self.neg_flag = neg_flag #自分が交渉においてどちらが和なのかを示す　ー＞
+    
+    def propose(self, state: SAOState) -> Outcome | None:
+        return super().propose(state)
+    
+    def respond(self, state: SAOState, offer: Outcome, source: str) -> ResponseType:
+        return super().respond(state, offer, source)
+  """  
+import random
+
+# VehicleNegotiatorクラスの定義（NegMASのSAONegotiatorの代わりに基本的なPythonクラスを使用）
+class VehicleNegotiator(SAONegotiator):
+    def __init__(self, vehicle_id, tasks, is_vehicle_a, task_a=None,preferences: Preferences | None = None, ufun: BaseUtilityFunction | None = None, name: str | None = None, parent: Controller | None = None, owner: Agent | None = None, id: str | None = None, type_name: str | None = None, can_propose: bool = True):
+        self.vehicle_id = vehicle_id  # 車両ID
+        self.tasks = tasks            # タスクのリスト（ルート）
+        self.is_vehicle_a = is_vehicle_a  # 車両Aかどうかを示すフラグ
+        self.task_a = task_a          # taskA（車両Aの場合のみ）
+        self.initial_offer_received = None  # 初回に受け取った提案
+        super().__init__(preferences, ufun, name, parent, owner, id, type_name, can_propose)
+        self._capabilities = {}  # または適切な初期値を設定してください
+
+    def propose(self):
+        # 提案のロジックを実装
+        print("1")
+        if self.is_vehicle_a:
+            # 車両Aの場合、taskAの提案のみ行う
+            return {"taskA": self.task_a, "taskB": None}
+        else:
+            # 車両Bの場合、初回に受け取った提案からtaskAを取得
+            task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
+            task_b = None  # 一方的に受け取る場合
+            if self.tasks:
+                task_b = random.choice(self.tasks)  # taskBをランダムに選択
+            return {"taskA": task_a, "taskB": task_b}
+
+    def respond(self, state: SAOState, offer: Outcome, source: str):
+        # 応答のロジックを実装
+        if not self.initial_offer_received:
+            self.initial_offer_received = offer  # 初回の提案を保存
+        # その後の応答ロジックをここに実装
+        if self.is_vehicle_a:
+            task_b = offer["taskB"] if self.initial_offer_received else None
+            if self.check_task(task_b) == True:
+                return ResponseType.ACCEPT_OFFER
+            else:
+                return ResponseType.REJECT_OFFER
+        else:
+            if self.n_steps == 10:
+                return ResponseType.ACCEPT_OFFER
+        return ResponseType.REJECT_OFFER
+    
+    def check_task(self,new_task):
+        # 車両の開始位置から新しいタスクまでの距離を計算
+        start_task = Task(0, 0, 0, 0, 0, 0, 0)  # 仮の開始位置
+        travel_time_from_start = euclidean_distance(start_task, new_task)
+        if travel_time_from_start <= new_task.due_date :
+            if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, self.tasks[0]) <= self.tasks[0].due_date: 
+                return True
+
+        # 各タスク間での新しいタスクの挿入を試みる
+        for i in range(len(self.tasks) - 1):
+            current_task = self.tasks[i]
+            next_task = self.tasks[i + 1]
+
+            # 現在のタスクの終了時間を計算
+            current_task_end_time = current_task.ready_time + current_task.service_time
+
+            # 新しいタスクへの移動に必要な時間を計算
+            travel_time_to_new_task = euclidean_distance(current_task, new_task)
+
+            # 新しいタスクのサービス終了時間を計算
+            new_task_end_time = current_task_end_time + travel_time_to_new_task + new_task.service_time
+
+            # 次のタスクへの移動に必要な時間を計算
+            travel_time_to_next_task = euclidean_distance(new_task, next_task)
+
+            # 次のタスクの開始時間を計算
+            next_task_start_time = new_task_end_time + travel_time_to_next_task
+
+            # 新しいタスクがdue_date前に終了し、次のタスクが時間内に開始できるかどうかを確認
+            if current_task_end_time + travel_time_to_new_task <= new_task.due_date and next_task_start_time <= next_task.due_date:
+                return True
+
+        # すべてのタスクの後に新しいタスクを追加する場合の判定
+        last_task = self.tasks[-1]
+        last_task_end_time = last_task.ready_time + last_task.service_time
+        travel_time_to_new_task = euclidean_distance(last_task, new_task)
+        if last_task_end_time + travel_time_to_new_task <= new_task.due_date:
+            return True
+        return False
+    
+    @property
+    def capabilities(self):
+        # ここで _capabilities を返すロジックを実装します
+        return self._capabilities
+
+    @capabilities.setter
+    def capabilities(self, value):
+        # ここで _capabilities を設定するロジックを実装します
+        self._capabilities = value
+

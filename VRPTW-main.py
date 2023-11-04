@@ -123,11 +123,13 @@ for negotiate_steps in range(N):
                 cars_A.accept_offer(offer,negotiation_id)
                 negotiation_id += 1
 
-    negotiation_list =[]
     agreements=[]
     for neg in negotiation_list:
         neg.vehicleA.start_negotiation(neg.id)
-        result=Nego1(neg.vehicleA,neg.vehicleB)
+        negA=neg.vehicleA.make_neg_agent()
+        negB=neg.vehicleB.make_neg_agent()
+        result=Nego1(neg.vehicleA,neg.vehicleB,negA,negB)
+        print(result)
         # 交渉が成功した場合には合意内容をリストに追加
         if result.agreement != None:
             agreement = result.agreement
@@ -135,7 +137,6 @@ for negotiate_steps in range(N):
             taskB = agreement.get('taskB')        
             agreements.append(Agree(neg.vehicleA,neg.vehicleB,taskA,taskB))
         neg.vehicleA.end_negotiation()
-
     signed = []
     #署名の実施
     for agr in agreements:
@@ -176,7 +177,7 @@ for negotiate_steps in range(N):
     for car in vehicles:
         car.step()
 
-    filename = os.path.join(directory_name, f"step-{negotiate_steps}.txt")
+    filename = os.path.join(directory_name, f"step-{negotiate_steps+1}.txt")
     with open(filename, 'w') as f:
         for vehicle in vehicles:
             task_ids = [task.id for task in vehicle.tasks]

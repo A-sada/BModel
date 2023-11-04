@@ -10,6 +10,7 @@ import copy
 import math
 from balletin_are_search import most_stayed_area_dynamic,update_stay_areas
 import random
+from Vehicle_Negotiatior import VehicleNegotiator
 class Vehicle:
     def __init__(self, id, max_weight,dep_x, dep_y):
         super().__init__()
@@ -20,7 +21,7 @@ class Vehicle:
         #self.y_coordinate = y_coordinate  # 現在地のy座標
         self.max_weight = max_weight  # 最大積載量
         self.current_weight = 0  # 現在の積載量
-        self.propose_task : Task
+        self.propose_task = None
         self.tasks = []  # 割り当てられたタスクのリスト
         self.offer_nego_list=[] #自分の交渉リスト・自分が提案側ならここにスタート時の交渉内容を保存する
         self.next_nego={} #交渉IDと自分の交渉リストインデックスと対応
@@ -131,11 +132,12 @@ class Vehicle:
         if neg_task != None:
             self.propose_task = neg_task
             #propse_taskはタスクリストのインデックス
-            self.offer_flag = 1
+            self.offer_flag = True
             #自分が提案した交渉ならフラグがたつ
         return
     
-
+    def make_neg_agent(self):
+        return VehicleNegotiator(self.id,self.tasks,self.offer_flag,self.propose_task)
     #交渉終了時に呼び出される
     def end_negotiation(self):
         self.offer_flag = 0
