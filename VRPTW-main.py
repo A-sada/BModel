@@ -1,6 +1,6 @@
 
 from initialsolution import assign_tasks_to_vehicles_with_insert,read_task
-from Vehicle import Vehicle
+from Strategy_Vehicle_ver1 import Vehicle
 from classes import Task,Offer,Nego,Agree,Balletin
 import random
 from negmas import SAOMechanism, AspirationNegotiator, Issue, ResponseType,SAOState
@@ -9,6 +9,7 @@ from datetime import datetime
 from Negotiator import Nego1
 import math
 import pandas as pd
+from balletin_are_search import create_time_zones
 run_num = 0
 tasks = []  # タスクを保存するためのリスト
 vehicles = []
@@ -32,7 +33,7 @@ stay_areas_bb = pd.DataFrame({
     'F': pd.Series(dtype='str'),
     'G': pd.Series(dtype='str')
 })
-bulletin_board = Balletin(False,b_board,stay_areas_bb)
+
 # taskのリスト化
 import os
 # ディレクトリの名前を指定
@@ -56,11 +57,13 @@ max_time = ll[1]
 #n = (int)(max_xy /25)
 n =(int)(math.sqrt((len(tasks) / 10)))
 n_zones = 7
+zones = create_time_zones(max_time,n_zones)
 print(max_xy)
 dep_x = tasks[0].x_coordinate
 dep_y = tasks[0].y_coordinate
 tasks.pop(0)
 random.shuffle(tasks)
+bulletin_board = Balletin(False,b_board,stay_areas_bb, max_xy,n,zones)
 # タスクを車両に割り当て（時間制約を含む）
 assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y)
 for car in vehicles:
@@ -83,15 +86,16 @@ with open(filename, 'w') as f:
         if len(task_ids) == 1:
             count += 1
 
-print(count)
+
 #掲示板の共有
 for car in vehicles:
     car.set_balletin(bulletin_board)
 
 from collections import deque
-N=1
+N=10
 
 for negotiate_steps in range(N):
+    bulletin_board.n_steps += 1
 #全車両から交渉の提案を受け付ける
     Offer_list = deque()
     offer_id=0
@@ -129,50 +133,62 @@ for negotiate_steps in range(N):
         negA=neg.vehicleA.make_neg_agent()
         negB=neg.vehicleB.make_neg_agent()
         result=Nego1(neg.vehicleA,neg.vehicleB,negA,negB)
-        print(result)
+        #print(result)
         # 交渉が成功した場合には合意内容をリストに追加
         if result.agreement != None:
             agreement = result.agreement
-            taskA = agreement.get('taskA')
-            taskB = agreement.get('taskB')        
+            taskA = agreement['taskA']if 'taskA' in agreement else None
+            taskB = agreement['taskB']if 'taskB' in agreement else None
             agreements.append(Agree(neg.vehicleA,neg.vehicleB,taskA,taskB))
         neg.vehicleA.end_negotiation()
     signed = []
     #署名の実施
+    #print(agreements)
     for agr in agreements:
         AgentA = agr.vehicleA
         AgentB = agr.vehicleB
         if AgentA.sign_contract(AgentB,agr.taskA,agr.taskB) == True:
             if AgentB.sign_contract(AgentA,agr.taskB,agr.taskA) == True:
                 signed.append(agr)
+                cnt = agr
+                vehicleA = cnt.vehicleA
+                vehicleB = cnt.vehicleB
+                taskA = cnt.taskA
+                taskB = cnt.taskB
+                if vehicleA.pop(taskA)== True:
+                    if vehicleB.pop(taskB) == False:
+                        vehicleA.add(taskA)
+                if vehicleA.add(taskB) == False:
+                    vehicleA.add(taskA)
+                    vehicleB.add(taskB)
+                elif vehicleB.add(taskA) == False:
+                    vehicleA.pop(taskB)
+                    vehicleA.add(taskA)
+                    vehicleB.add(taskB)
 
-    for cnt in signed:
-        vehicleA = cnt.vehicleA
-        vehicleB = cnt.vehicleB
-        taskA = cnt.taskA
-        taskB = cnt.taskB
-        if vehicleA.pop(taskA)== True:
-            if vehicleB.pop(taskB) == False:
-                vehicleA.add(taskA)
-        if vehicleA.add(taskB) == False:
-            vehicleA.add(taskA)
-            vehicleB.add(taskB)
-        elif vehicleB.add(taskA) == False:
-            vehicleA.pop(taskB)
-            vehicleA.add(taskA)
-            vehicleB.add(taskB)
-
+   # for cnt in signed:
+   #     print(cnt)
+        
     #未稼働車両の削除
     zzz = 0
     for car in vehicles:
         if len(car.tasks) == 0:
             no_runs.append(car)
             del vehicles[zzz]
+            # id = 5 の行のインデックスを見つける
+            indices_to_drop = bulletin_board.time_board[bulletin_board.time_board.id == car.id].index
+            # これらの行を削除する
+            bulletin_board.time_board = bulletin_board.time_board.drop(indices_to_drop)
+        
+            # 'stay_areas_bb' DataFrame についても同様に行う
+            indices_to_drop =bulletin_board.area_board[bulletin_board.area_board.id == 5].index
+            bulletin_board.area_board = bulletin_board.area_board.drop(indices_to_drop)
+
         zzz += 1
 
 #掲示板の更新
     for car in vehicles:
-        car.bulletin_update(max_xy,max_time,n_zones,n)
+        car.bulletin_update(max_xy,max_time,zones,n)
 
     for car in vehicles:
         car.step()

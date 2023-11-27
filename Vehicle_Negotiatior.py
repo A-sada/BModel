@@ -26,29 +26,33 @@ import random
 
 # VehicleNegotiatorクラスの定義（NegMASのSAONegotiatorの代わりに基本的なPythonクラスを使用）
 class VehicleNegotiator(SAONegotiator):
-    def __init__(self, vehicle_id, tasks, is_vehicle_a, task_a=None,preferences: Preferences | None = None, ufun: BaseUtilityFunction | None = None, name: str | None = None, parent: Controller | None = None, owner: Agent | None = None, id: str | None = None, type_name: str | None = None, can_propose: bool = True):
+    def __init__(self, vehicle_id, tasks, is_vehicle_a, task_a=None, preferences: Preferences | None = None, ufun: BaseUtilityFunction | None = None, name: str | None = None, parent: Controller | None = None, owner: Agent | None = None, id: str | None = None, type_name: str | None = None, can_propose: bool = True):
         self.vehicle_id = vehicle_id  # 車両ID
         self.tasks = tasks            # タスクのリスト（ルート）
         self.is_vehicle_a = is_vehicle_a  # 車両Aかどうかを示すフラグ
         self.task_a = task_a          # taskA（車両Aの場合のみ）
         self.initial_offer_received = None  # 初回に受け取った提案
-        super().__init__(preferences, ufun, name, parent, owner, id, type_name, can_propose)
-        self._capabilities = {}  # または適切な初期値を設定してください
+        self.n_steps=0
+        super().__init__( preferences, ufun, name, parent, owner, id, type_name, can_propose)
+        #self.add_capabilities(dict(propose_for_self=True))
 
-    def propose(self):
+    def propose(self,state):
         # 提案のロジックを実装
-        print("1")
+        self.n_steps += 1
+        task_a = None
         if self.is_vehicle_a:
             # 車両Aの場合、taskAの提案のみ行う
-            return {"taskA": self.task_a, "taskB": None}
+            offer = {"taskA": self.task_a, "taskB": None}
         else:
             # 車両Bの場合、初回に受け取った提案からtaskAを取得
             task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
             task_b = None  # 一方的に受け取る場合
             if self.tasks:
                 task_b = random.choice(self.tasks)  # taskBをランダムに選択
-            return {"taskA": task_a, "taskB": task_b}
-
+            offer ={"taskA": task_a, "taskB": task_b}
+        #return super().propose(offer)
+        return offer
+    
     def respond(self, state: SAOState, offer: Outcome, source: str):
         # 応答のロジックを実装
         if not self.initial_offer_received:
@@ -56,14 +60,16 @@ class VehicleNegotiator(SAONegotiator):
         # その後の応答ロジックをここに実装
         if self.is_vehicle_a:
             task_b = offer["taskB"] if self.initial_offer_received else None
-            if self.check_task(task_b) == True:
-                return ResponseType.ACCEPT_OFFER
-            else:
-                return ResponseType.REJECT_OFFER
+            if task_b != None:
+                if self.check_task(task_b) == True:
+                    return ResponseType.ACCEPT_OFFER
+                else:
+                    return ResponseType.REJECT_OFFER
         else:
             if self.n_steps == 10:
                 return ResponseType.ACCEPT_OFFER
         return ResponseType.REJECT_OFFER
+    
     
     def check_task(self,new_task):
         # 車両の開始位置から新しいタスクまでの距離を計算
@@ -105,6 +111,8 @@ class VehicleNegotiator(SAONegotiator):
             return True
         return False
     
+
+
     @property
     def capabilities(self):
         # ここで _capabilities を返すロジックを実装します
@@ -114,4 +122,3 @@ class VehicleNegotiator(SAONegotiator):
     def capabilities(self, value):
         # ここで _capabilities を設定するロジックを実装します
         self._capabilities = value
-

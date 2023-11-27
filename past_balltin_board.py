@@ -4,18 +4,6 @@ import pandas as pd
 from classes import Task
 from VRPTW_functions import euclidean_distance
 # 全てのコードをまとめる（最終版）
-# サンプルのタスクデータ
-sample_tasks_car1 = [
-    Task("T1", 10, 20, 5, 50, 200, 10),
-    Task("T2", 40, 50, 6, 100, 300, 15),
-    Task("T3", 70, 20, 4, 200, 400, 20)
-]
-
-sample_tasks_car2 = [
-    Task("T4", 80, 60, 5, 50, 300, 10),
-    Task("T5", 30, 40, 4, 120, 350, 15),
-    Task("T6", 10, 10, 3, 200, 400, 10)
-]
 
 # 時間帯の範囲を動的に設定する関数
 def create_time_zones(T, num_zones):
@@ -100,7 +88,7 @@ df_row_car2['id'] = 'Car2'
 stay_areas_df_dynamic = pd.DataFrame(columns=['id'] + list(create_time_zones(T, num_zones).keys()))
 stay_areas_df_dynamic = stay_areas_df_dynamic.append(df_row_car1, ignore_index=True)
 stay_areas_df_dynamic = stay_areas_df_dynamic.append(df_row_car, ignore_index=True)
-2
+
 # DataFrameを逐次更新（テスト）
 new_data_car1 = {'A': 'A1', 'B': 'B2', 'C': 'C1'}
 new_data_car2 = {'A': 'A2', 'B': 'B3', 'C': 'C2'}

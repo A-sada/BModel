@@ -11,7 +11,7 @@ import math
 from balletin_are_search import most_stayed_area_dynamic,update_stay_areas
 import random
 from Vehicle_Negotiatior import VehicleNegotiator
-class Vehicle:
+class Vehicle_BASE:
     def __init__(self, id, max_weight,dep_x, dep_y):
         super().__init__()
         self.id = id  # 車両のID
@@ -30,6 +30,7 @@ class Vehicle:
         self.rout_pacs = []
         self.taskA = 0
         self.slack_time = []
+        self.Neg = 0
 
     #掲示板を取得
     def set_balletin(self,balletin : Balletin):
@@ -40,6 +41,7 @@ class Vehicle:
         return
     def step(self):
         self.offer_flag=0
+        self.offer_nego_list=[]
         return
     
     def accept_or_reject(self,offer):
@@ -123,7 +125,7 @@ class Vehicle:
             print("error- vehicleA have not task")
             return False
         #実施する交渉のリスト（自分が提案したタスクのみ）
-        self.next_nego[neg_id]=offer
+        self.next_nego[neg_id]=offer.task
         return
 
     #行われる交渉IDを受け取る，この値から自分が提案者側かどうかを判断する，
@@ -137,7 +139,8 @@ class Vehicle:
         return
     
     def make_neg_agent(self):
-        return VehicleNegotiator(self.id,self.tasks,self.offer_flag,self.propose_task)
+        self.Neg = VehicleNegotiator(self.id,self.tasks,self.offer_flag,self.propose_task,name= self.id)
+        return self.Neg
     #交渉終了時に呼び出される
     def end_negotiation(self):
         self.offer_flag = 0
@@ -145,13 +148,14 @@ class Vehicle:
     
     #署名戦略
     def sign_contract(self,partner,taskA,taskB):
-
+        
         return True
     
     #ルートから該当するタスクを削除
     def pop(self,task):
         for i, obj in enumerate(self.tasks):
             if obj.id == task.id:
+                self.current_weight -= self.tasks[i].weight
                 del self.tasks[i]
                 return True
         return False
@@ -205,10 +209,12 @@ class Vehicle:
     
     #コストが最小となる場所に挿入する
     def add(self, new_task):
+        if self.current_weight + new_task.weight > self.max_weight + 100000:
+            return False
         return self.least_cost_time_sensitive_insertion(self.tasks, new_task, 1)
     
     #掲示板の更新
-    def bulletin_update(self,X,T,num_zones,n):
+    def bulletin_update(self,X,T,zones,n):
         area = self.bulletin_board.area_board
         if not (self.bulletin_board.area_board['id'] == self.id).any():
             new_row = pd.DataFrame({'id': self.id, 'slack_time': [0], 'departure_time': [0], 'return_time': [0]})
@@ -217,7 +223,7 @@ class Vehicle:
         #self.slack_time = slack_time_list(self.tasks,empty_list = list(0 for _ in range(len(self.tasks))))
         self.bulletin_board.time_board.loc[self.bulletin_board.time_board['id']== self.id, 'slack_time'] = self.calculate_slack_time(self.tasks,100000,None)
         self.bulletin_board.time_board.loc[self.bulletin_board.time_board['id'] == self.id, ['departure_time', 'return_time']] = [self.tasks[0].ready_time - euclidean_distance(Task(0,self.dep_x,self.dep_y,0,0,0,0),self.tasks[0]),self.tasks[-1].due_date + self.tasks[-1].service_time + euclidean_distance(self.tasks[-1],Task(0,self.dep_x,self.dep_y,0,0,0,0))]
-        new_data = most_stayed_area_dynamic(self.tasks, X, T, num_zones, n,self.dep_x,self.dep_y)
+        new_data = most_stayed_area_dynamic(self.tasks, X, T, zones, n,self.dep_x,self.dep_y)
         if not ( self.bulletin_board.area_board['id'] == self.id).any():
             # 新しい行のインデックスを決定
             new_index = len(self.bulletin_board.area_board)
@@ -276,9 +282,14 @@ class Vehicle:
 
 
     def least_cost_time_sensitive_insertion(self ,route, new_task, alpha):
+        if not isinstance(new_task, Task):  # 仮定として Task というクラスが存在するとします。
+            print("エラー: 'new_task' が Task オブジェクトではありません。")
+            return False
         min_cost = float('inf')
         best_position = None
         cost = 0
+        if len(self.tasks) == 0:
+            return False
         # 車両の開始位置から新しいタスクまでの距離を計算
         start_task = Task(0, 0, 0, 0, 0, 0, 0)  # 仮の開始位置
         travel_time_from_start = euclidean_distance(start_task, new_task)
@@ -319,6 +330,7 @@ class Vehicle:
 
         if best_position != None:
             self.tasks.insert(best_position,new_task)
+            self.current_weight += new_task.weight
             return True
         return False
 

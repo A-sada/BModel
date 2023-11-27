@@ -1,7 +1,7 @@
 import random
 
 import math
-from Vehicle import Vehicle
+from Strategy_Vehicle_ver1 import Vehicle
 from classes import Task
 from VRPTW_functions import euclidean_distance
 
@@ -168,7 +168,6 @@ def read_task(filename, tasks):
                 max_due_date = max(max_due_date, due_date)
 
     return [max(max_x_coordinate, max_y_coordinate), max_due_date]
-
 
 
 class exchange_tasks:

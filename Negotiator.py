@@ -1,4 +1,4 @@
-from Vehicle import Vehicle
+from Strategy_Vehicle_ver1 import Vehicle
 from negmas import SAOMechanism
 from negmas.utilities import UtilityFunction
 from negmas.outcomes import Outcome

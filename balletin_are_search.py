@@ -42,6 +42,8 @@ def passing_areas_coordinates(task1, task2, X):
     distance = euclidean_distance(task1, task2)
     steps = int(distance)
     coordinates = []
+    if steps < 1:
+        steps = 1
     for i in range(steps + 1):
         ratio = i / steps
         x = task1.x_coordinate + ratio * (task2.x_coordinate - task1.x_coordinate)
@@ -55,11 +57,12 @@ def calculate_dynamic_area(x, y, X, n):
     row = chr(65 + int(y // cell_size))
     col = int(x // cell_size) + 1
     return f"{row}{col}"
+#アルファベットが，y座標
 
 # 時間帯ごとに最も長く滞在するエリアを動的に計算する関数（修正版）
-def most_stayed_area_dynamic(tasks, X, T, num_zones, n, dep_x, dep_y):
+def most_stayed_area_dynamic(tasks, X, T, zones, n, dep_x, dep_y):
     tasks = [Task(0, dep_x, dep_y, 0, 0, 0, 0)] + tasks[:] + [Task(0, dep_x, dep_y, 0, 0, 0, 0)]
-    time_zones = create_time_zones(T, num_zones)
+    time_zones = zones
     df_row = {}
     yet_dep = tasks[1].ready_time - euclidean_distance(tasks[0],tasks[1])
     back_dep = tasks[-2].ready_time + euclidean_distance(tasks[0],tasks[-2])

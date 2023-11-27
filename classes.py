@@ -23,7 +23,7 @@ class Nego:
         self.vehicleB = vehicleB     
 
 class Agree:
-    def __init__(self, vehicleA, vehicleB, TaskA,TaskB) -> None:
+    def __init__(self, vehicleA, vehicleB, TaskA:Task,TaskB:Task) -> None:
         self.vehicleA = vehicleA
         self.vehicleB = vehicleB
         #車両Aが，捨てるタスク
@@ -41,12 +41,22 @@ class rout_pac:
 import pandas as pd
 
 class Balletin:
-    def __init__(self,using :bool ,time_board : pd, area_board : pd ) -> None:
+    def __init__(self,using :bool ,time_board : pd, area_board : pd, X :int ,n  :int,zones) -> None:
         
         self.use = using #掲示板を利用中のエージェントの有無の判断
 
         self.time_board = time_board
 
         self.area_board = area_board
+
+        self. n_steps = 0
+
+        self.X = X #エリアの最大幅
+
+        self.n = n #エリアの分割数　いっぺんあたり
+
+        self.zones = zones #時間帯情報
+
+        #何日目かを示す→①日目からスタート（0日目は初期解生成の行う）
 
         
