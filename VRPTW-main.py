@@ -1,10 +1,7 @@
 
 from initialsolution import assign_tasks_to_vehicles_with_insert,read_task
-from Strategy_Vehicle_ver1 import Vehicle
 from classes import Task,Offer,Nego,Agree,Balletin
 import random
-from negmas import SAOMechanism, AspirationNegotiator, Issue, ResponseType,SAOState
-from typing import Optional, List
 from datetime import datetime
 from Negotiator import Nego1
 import math
@@ -147,24 +144,26 @@ for negotiate_steps in range(N):
     for agr in agreements:
         AgentA = agr.vehicleA
         AgentB = agr.vehicleB
-        if AgentA.sign_contract(AgentB,agr.taskA,agr.taskB) == True:
-            if AgentB.sign_contract(AgentA,agr.taskB,agr.taskA) == True:
-                signed.append(agr)
-                cnt = agr
-                vehicleA = cnt.vehicleA
-                vehicleB = cnt.vehicleB
-                taskA = cnt.taskA
-                taskB = cnt.taskB
-                if vehicleA.pop(taskA)== True:
-                    if vehicleB.pop(taskB) == False:
-                        vehicleA.add(taskA)
-                if vehicleA.add(taskB) == False:
-                    vehicleA.add(taskA)
-                    vehicleB.add(taskB)
-                elif vehicleB.add(taskA) == False:
-                    vehicleA.pop(taskB)
-                    vehicleA.add(taskA)
-                    vehicleB.add(taskB)
+        taskA = agr.taskA
+        taskB = agr.taskB
+        routA = AgentA.tasks
+        routB = AgentB.tasks
+
+        # 交換が成功したかどうかを追跡するためのフラグ
+        exchange_successful = False
+
+        # 両方の車両が契約に署名する場合
+        if AgentA.sign_contract(AgentB, taskA, taskB) and AgentB.sign_contract(AgentA, taskB, taskA):
+            # 交換を試みる
+            if AgentA.pop(taskA) and AgentB.pop(taskB):
+                if AgentB.add(taskB) and AgentB.add(taskA):
+                    exchange_successful = True
+
+            # 交換が成功しなかった場合、元に戻す
+            if not exchange_successful:
+                AgentA.tasks = routA
+                AgentB.tasks = routB
+
 
    # for cnt in signed:
    #     print(cnt)
