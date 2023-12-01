@@ -6,6 +6,7 @@ from datetime import datetime
 from Negotiator import Nego1
 import math
 import pandas as pd
+import copy
 from balletin_are_search import create_time_zones
 run_num = 0
 tasks = []  # タスクを保存するためのリスト
@@ -97,7 +98,7 @@ for negotiate_steps in range(N):
     Offer_list = deque()
     offer_id=0
     for vehicle in vehicles:
-        lst=vehicle.offer_on_negotiation(vehicles,offer_id)
+        lst=vehicle.offer_on_negotiation(vehicles,offer_id,vehicles)
         Offer_list.append(lst)
         offer_id += len(lst)
 
@@ -139,30 +140,49 @@ for negotiate_steps in range(N):
             agreements.append(Agree(neg.vehicleA,neg.vehicleB,taskA,taskB))
         neg.vehicleA.end_negotiation()
     signed = []
+    # 各車両ごとに関連する契約を格納するための辞書
+    vehicle_agreements = {vehicle: [] for vehicle in vehicles}
+
+    # 各契約をループし、関連する車両に契約を追加
+    for agreement in agreements:
+        if agreement.vehicleA in vehicle_agreements:
+            vehicle_agreements[agreement.vehicleA].append(agreement)
+        if agreement.vehicleB in vehicle_agreements:
+            vehicle_agreements[agreement.vehicleB].append(agreement)
+
+    contracts_signed = {}
     #署名の実施
-    #print(agreements)
-    for agr in agreements:
-        AgentA = agr.vehicleA
-        AgentB = agr.vehicleB
-        taskA = agr.taskA
-        taskB = agr.taskB
-        routA = AgentA.tasks
-        routB = AgentB.tasks
-
-        # 交換が成功したかどうかを追跡するためのフラグ
+    for vehicle in vehicle_agreements:
+        contracts_signed[vehicle] = vehicle.sign_contracts(vehicle_agreements[vehicle])
+    
+    for contract in agreements:
+        if contract in contracts_signed.get(contract.vehicleA, []) and \
+           contract in contracts_signed.get(contract.vehicleB, []):
+            signed.append(contract)
+        
+    for sig in signed:
+        AgentA = sig.vehicleA
+        AgentB = sig.vehicleB
+        taskA = sig.taskA
+        taskB = sig.taskB
+        routA = copy.deepcopy(AgentA.tasks)
+        routB = copy.deepcopy(AgentB.tasks)
+        
         exchange_successful = False
-
-        # 両方の車両が契約に署名する場合
-        if AgentA.sign_contract(AgentB, taskA, taskB) and AgentB.sign_contract(AgentA, taskB, taskA):
-            # 交換を試みる
-            if AgentA.pop(taskA) and AgentB.pop(taskB):
-                if AgentB.add(taskB) and AgentB.add(taskA):
+        if taskB is None:
+            if AgentA.pop(taskA) :
+                if AgentB.add(taskA) :
                     exchange_successful = True
+        # 交換が成功したかどうかを追跡するためのフラグ
+        elif AgentA.pop(taskA) and AgentB.pop(taskB) :
+            if AgentB.add(taskB)  and AgentB.add(taskA) :
+                exchange_successful = True
 
-            # 交換が成功しなかった場合、元に戻す
-            if not exchange_successful:
-                AgentA.tasks = routA
-                AgentB.tasks = routB
+        # 交換が成功しなかった場合、元に戻す
+        if not exchange_successful:
+            AgentA.tasks = routA
+            AgentB.tasks = routB
+
 
 
    # for cnt in signed:
@@ -171,23 +191,28 @@ for negotiate_steps in range(N):
     #未稼働車両の削除
     zzz = 0
     for car in vehicles:
-        if len(car.tasks) == 0:
+        if len(car.tasks)== 0:
             no_runs.append(car)
-            del vehicles[zzz]
+            #vehicles.remove(car)
+            vehicles.pop(zzz)
+            #del vehicles[zzz]
+            #zzz += 1
             # id = 5 の行のインデックスを見つける
             indices_to_drop = bulletin_board.time_board[bulletin_board.time_board.id == car.id].index
             # これらの行を削除する
             bulletin_board.time_board = bulletin_board.time_board.drop(indices_to_drop)
         
             # 'stay_areas_bb' DataFrame についても同様に行う
-            indices_to_drop =bulletin_board.area_board[bulletin_board.area_board.id == 5].index
+            indices_to_drop =bulletin_board.area_board[bulletin_board.area_board.id == car.id].index
             bulletin_board.area_board = bulletin_board.area_board.drop(indices_to_drop)
-
+        else:
+            car.bulletin_update(max_xy,max_time,zones,n)
         zzz += 1
+    
 
 #掲示板の更新
-    for car in vehicles:
-        car.bulletin_update(max_xy,max_time,zones,n)
+   # for car in vehicles:
+    #    car.bulletin_update(max_xy,max_time,zones,n)
 
     for car in vehicles:
         car.step()

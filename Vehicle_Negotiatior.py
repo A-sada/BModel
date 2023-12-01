@@ -48,7 +48,8 @@ class VehicleNegotiator(SAONegotiator):
             task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
             task_b = None  # 一方的に受け取る場合
             if self.tasks:
-                task_b = random.choice(self.tasks)  # taskBをランダムに選択
+                task_b = random.choice(self.tasks+[None])  # taskBをランダムに選択
+
             offer ={"taskA": task_a, "taskB": task_b}
         #return super().propose(offer)
         return offer
@@ -60,11 +61,18 @@ class VehicleNegotiator(SAONegotiator):
         # その後の応答ロジックをここに実装
         if self.is_vehicle_a:
             task_b = offer["taskB"] if self.initial_offer_received else None
+            if len(self.tasks) < 3:
+                if task_b == None:
+                    return ResponseType.ACCEPT_OFFER
+                else:
+                    return ResponseType.REJECT_OFFER
             if task_b != None:
                 if self.check_task(task_b) == True:
                     return ResponseType.ACCEPT_OFFER
                 else:
                     return ResponseType.REJECT_OFFER
+            else:
+                return ResponseType.ACCEPT_OFFER
         else:
             if self.n_steps == 10:
                 return ResponseType.ACCEPT_OFFER

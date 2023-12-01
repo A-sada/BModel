@@ -142,23 +142,38 @@ class Vehicle_BASE:
         self.Neg = VehicleNegotiator(self.id,self.tasks,self.offer_flag,self.propose_task,name= self.id)
         return self.Neg
     #交渉終了時に呼び出される
+    #交渉時に自分が提案者側かどうかを示すフラグの初期化
     def end_negotiation(self):
         self.offer_flag = 0
         return
-    
+    #合意した契約のリストが渡される，署名する契約のリストを返す．
+    def sign_contracts(self,list: List):
+        signed=[]
+        for contract in list:
+            if contract.vehicleA == self:
+                partner = contract.vehicleB
+            else:
+                partner = contract.vehicleA
+            if self.sign_contract(partner,contract.taskA,contract.taskB):
+                signed.append(contract)
+
+        return signed
     #署名戦略
+    #タスクAとタスクBのどちらが自分持つタスクか確認する必要あり
     def sign_contract(self,partner,taskA,taskB):
         
         return True
     
     #ルートから該当するタスクを削除
     def pop(self,task):
-        for i, obj in enumerate(self.tasks):
-            if obj.id == task.id:
-                self.current_weight -= self.tasks[i].weight
-                del self.tasks[i]
-                return True
-        return False
+        if task in self.tasks:
+            self.tasks.remove(task)
+        else:
+            return False
+        if task in self.tasks:
+            return False
+        else:
+            return True
     
     #とにかく挿入可能な場所に挿入する
     def add_old(self,new_task):
@@ -211,7 +226,13 @@ class Vehicle_BASE:
     def add(self, new_task):
         if self.current_weight + new_task.weight > self.max_weight + 100000:
             return False
-        return self.least_cost_time_sensitive_insertion(self.tasks, new_task, 1)
+        if new_task in self.tasks:
+            return False
+        self.least_cost_time_sensitive_insertion(new_task)
+        if new_task in self.tasks:
+            return True
+        else:
+            return False
     
     #掲示板の更新
     def bulletin_update(self,X,T,zones,n):
@@ -281,7 +302,7 @@ class Vehicle_BASE:
         return slack_time
 
 
-    def least_cost_time_sensitive_insertion(self ,route, new_task, alpha):
+    def least_cost_time_sensitive_insertion(self , new_task):
         if not isinstance(new_task, Task):  # 仮定として Task というクラスが存在するとします。
             print("エラー: 'new_task' が Task オブジェクトではありません。")
             return False
@@ -291,7 +312,7 @@ class Vehicle_BASE:
         if len(self.tasks) == 0:
             return False
         # 車両の開始位置から新しいタスクまでの距離を計算
-        start_task = Task(0, 0, 0, 0, 0, 0, 0)  # 仮の開始位置
+        start_task = Task(0, self.dep_x, self.dep_y, 0, 0, 0, 0)  # 仮の開始位置
         travel_time_from_start = euclidean_distance(start_task, new_task)
         if travel_time_from_start <= new_task.due_date :
             if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, self.tasks[0]) <= self.tasks[0].due_date: 

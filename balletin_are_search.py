@@ -16,7 +16,7 @@ sample_tasks_car2 = [
     Task("T5", 30, 40, 4, 120, 350, 15),
     Task("T6", 10, 10, 3, 200, 400, 10)
 ]
-class Task:
+class Task1:
     def __init__(self, id, x_coordinate, y_coordinate, weight, ready_time, due_date, service_time):
         self.id = id  # タスク（顧客）のID
         self.x_coordinate = x_coordinate  # 配送先のx座標
