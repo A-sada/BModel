@@ -71,3 +71,4 @@ def find_vehicle_by_id(vehicle_id, vehicles):
         if vehicle.id == vehicle_id:
             return vehicle
     return None  # IDと一致するvehicleが見つからなかった場合
+
