@@ -1,5 +1,5 @@
 import math
-from classes import Task
+from classes import Task,pac_task
 # タスク間または車両とタスク間のユークリッド距離を計算する関数
 def euclidean_distance(task1, task2):
     return (int)(math.sqrt((task1.x_coordinate - task2.x_coordinate)**2 + (task1.y_coordinate - task2.y_coordinate)**2))
@@ -72,3 +72,46 @@ def find_vehicle_by_id(vehicle_id, vehicles):
             return vehicle
     return None  # IDと一致するvehicleが見つからなかった場合
 
+def earliest_start_time_list(tasks : list[pac_task]):
+    #リストで計算する
+    current_time = tasks[0].task.ready_time
+    i = 0 
+    for task in tasks:
+        if i == 0:
+            task.earliest_start_time = current_time
+            current_time += task.task.service_time
+            i += 1
+            pre_task =task
+        else:
+            current_time += euclidean_distance(pre_task.task,task.task)
+
+            task.earliest_start_time = current_time
+            current_time += task.task.service_time
+            pre_task =task
+            
+
+
+def calculate_earliest_start_time(previous_task, current_task,current_time):
+    # 前のタスクのサービス終了時刻がcurrent_time
+    current_time += euclidean_distance(previous_task.task,current_task.task)
+    current_time = max(current_task.task.ready_time,current_time)
+
+    return current_time
+
+def latest_start_time_list(tasks : list[pac_task]):
+    current_time = tasks[-1].task.due_date
+    i = 0
+    for task in reversed(tasks):
+        if i == 0:
+            task.late_start_time = current_time
+            pre_task =task
+            i += 1
+        else:
+            current_time -= euclidean_distance(pre_task.task,task.task)
+            current_time -= task.task.service_time
+            task.late_start_time = current_time
+            current_time = min(current_time,task.task.due_date)
+            task.late_start_time = current_time
+            pre_task = task
+
+    

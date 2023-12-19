@@ -59,4 +59,8 @@ class Balletin:
 
         #何日目かを示す→①日目からスタート（0日目は初期解生成の行う）
 
-        
+class pac_task:
+    def __init__(self, task : Task) -> None:
+        self.task = task 
+        self.earliest_start_time = 0
+        self.late_start_time = 0

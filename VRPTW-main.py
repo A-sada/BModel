@@ -93,6 +93,8 @@ from collections import deque
 N=10
 
 for negotiate_steps in range(N):
+    for car in vehicles:
+        car.first_step()
     bulletin_board.n_steps += 1
 #全車両から交渉の提案を受け付ける
     Offer_list = deque()
