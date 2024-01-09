@@ -8,6 +8,7 @@ from negmas.sao.common import ResponseType
 from negmas.situated import Agent
 from VRPTW_functions import euclidean_distance
 from classes import Task
+from VRPTW_functions import calculate_cost_saving
 """
 class negotiator(SAONegotiator):
     def __init__(self, owner : Vehicle_Base  ,List : list,neg_flag):
@@ -33,6 +34,9 @@ class VehicleNegotiator(SAONegotiator):
         self.task_a = task_a          # taskA（車両Aの場合のみ）
         self.initial_offer_received = None  # 初回に受け取った提案
         self.n_steps=0
+        self.bulletin_board = None
+        self.remove_list=[]
+        self.arrival_time_list=[]
         super().__init__( preferences, ufun, name, parent, owner, id, type_name, can_propose)
         #self.add_capabilities(dict(propose_for_self=True))
 
@@ -40,13 +44,18 @@ class VehicleNegotiator(SAONegotiator):
         # 提案のロジックを実装
         self.n_steps += 1
         task_a = None
+        
         if self.is_vehicle_a:
             # 車両Aの場合、taskAの提案のみ行う
             offer = {"taskA": self.task_a, "taskB": None}
         else:
+            if self.n_steps == 1:
+                # 車両Bの場合、初回に受け取った提案からtaskAを取得
+                task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
+                task_b = None
             # 車両Bの場合、初回に受け取った提案からtaskAを取得
-            task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
-            task_b = None  # 一方的に受け取る場合
+            #task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
+            #task_b = None  # 一方的に受け取る場合
             if self.tasks:
                 task_b = random.choice(self.tasks+[None])  # taskBをランダムに選択
 

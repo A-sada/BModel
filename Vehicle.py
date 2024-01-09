@@ -31,7 +31,8 @@ class Vehicle_BASE:
         self.taskA = 0
         self.slack_time = []
         self.Neg = 0
-
+        self.over_task =[]
+        self.arrival_time_list =[]
     #掲示板を取得
     def set_balletin(self,balletin : Balletin):
         self.bulletin_board = balletin
@@ -137,9 +138,14 @@ class Vehicle_BASE:
             self.offer_flag = True
             #自分が提案した交渉ならフラグがたつ
         return
-    
+    def before_negotiation(self):
+        return
     def make_neg_agent(self):
         self.Neg = VehicleNegotiator(self.id,self.tasks,self.offer_flag,self.propose_task,name= self.id)
+        self.Neg.bulletin_board = self.bulletin_board
+        self.before_negotiation()
+        self.Neg.remove_list = self.over_task
+        self.Neg.arrival_time_list = self.arrival_time_list
         return self.Neg
     #交渉終了時に呼び出される
     #交渉時に自分が提案者側かどうかを示すフラグの初期化

@@ -51,11 +51,17 @@ class Balletin:
 
         self. n_steps = 0
 
+        self.max_steps = 0
+
         self.X = X #エリアの最大幅
 
         self.n = n #エリアの分割数　いっぺんあたり
 
         self.zones = zones #時間帯情報
+
+        self.dep_x = 0
+
+        self.dep_y = 0
 
         #何日目かを示す→①日目からスタート（0日目は初期解生成の行う）
 
@@ -64,3 +70,4 @@ class pac_task:
         self.task = task 
         self.earliest_start_time = 0
         self.late_start_time = 0
+        self.earliest_arrival_time=0

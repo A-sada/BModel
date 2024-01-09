@@ -91,7 +91,7 @@ for car in vehicles:
 
 from collections import deque
 N=10
-
+bulletin_board.max_steps = N
 for negotiate_steps in range(N):
     for car in vehicles:
         car.first_step()
