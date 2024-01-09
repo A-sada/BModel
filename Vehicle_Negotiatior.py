@@ -9,6 +9,7 @@ from negmas.situated import Agent
 from VRPTW_functions import euclidean_distance
 from classes import Task
 from VRPTW_functions import calculate_cost_saving
+import copy
 """
 class negotiator(SAONegotiator):
     def __init__(self, owner : Vehicle_Base  ,List : list,neg_flag):
@@ -53,12 +54,14 @@ class VehicleNegotiator(SAONegotiator):
                 # 車両Bの場合、初回に受け取った提案からtaskAを取得
                 task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
                 task_b = None
+                self.make_remove_list(task_a)
             # 車両Bの場合、初回に受け取った提案からtaskAを取得
             #task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
             #task_b = None  # 一方的に受け取る場合
             if self.tasks:
-                task_b = random.choice(self.tasks+[None])  # taskBをランダムに選択
-
+                task_b = self.remove_list.pop(0)  # taskBをランダムに選択
+                if task_b == "0":
+                    task_b = None
             offer ={"taskA": task_a, "taskB": task_b}
         #return super().propose(offer)
         return offer
@@ -73,11 +76,18 @@ class VehicleNegotiator(SAONegotiator):
             if len(self.tasks) < 3:
                 if task_b == None:
                     return ResponseType.ACCEPT_OFFER
+                elif calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.bulletin_board,self.tasks) < 0:
+                    return ResponseType.ACCEPT_OFFER
                 else:
                     return ResponseType.REJECT_OFFER
+                
             if task_b != None:
+                cost = calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.bulletin_board,self.tasks) 
                 if self.check_task(task_b) == True:
-                    return ResponseType.ACCEPT_OFFER
+                    if cost < 0:
+                        return ResponseType.ACCEPT_OFFER
+                    else:
+                        return ResponseType.REJECT_OFFER
                 else:
                     return ResponseType.REJECT_OFFER
             else:
@@ -87,7 +97,30 @@ class VehicleNegotiator(SAONegotiator):
                 return ResponseType.ACCEPT_OFFER
         return ResponseType.REJECT_OFFER
     
-    
+    def make_remove_list(self,taskA):
+        remove_list = []
+        for task_pac in self.arrival_time_list:
+            if task_pac.earliest_start_time > task_pac.task.due_date:
+                remove_list.append(task_pac.task)
+        pac_list = copy.deepcopy(self.arrival_time_list)
+        #pac_listから要素を1つずつ削除して，コストの減少が大きい順に並べる
+        #remove_listにあるタスクは前に来るようにする
+        #pac_listからi番目のタスクを削除したときのコストの増減を計算する
+        cost={}
+        rt_list = []
+        for pac in pac_list:
+            cost[pac.task] =calculate_cost_saving(self.arrival_time_list,pac.task,taskA,self.bulletin_board,self.tasks)
+        cost["0"] = calculate_cost_saving(self.arrival_time_list,None,taskA,self.bulletin_board,self.tasks)
+        sorted_cost = sorted(cost.items(), key=lambda x:x[1])
+        for i in sorted_cost:
+            if i[0] in remove_list:
+                remove_list.remove(i[0])
+                rt_list.append(i[0])
+        for i in remove_list:
+            if i[0] not in remove_list:
+                rt_list.append(i[0])
+        self.remove_list = rt_list
+
     def check_task(self,new_task):
         # 車両の開始位置から新しいタスクまでの距離を計算
         start_task = Task(0, 0, 0, 0, 0, 0, 0)  # 仮の開始位置
