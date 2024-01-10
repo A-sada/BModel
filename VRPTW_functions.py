@@ -125,16 +125,16 @@ import copy
 
 
 # この関数は特定の合意結果のコスト削減を計算します。
-def calculate_cost_saving(task_list,taskA,taskB,bulletin_board,route):
+def calculate_cost_saving(task_list,taskA,taskB,route,bulletin_board):
 #この関数を利用する車両のリスト（パックリスト）と，交換するタスクたち，bulletin_boardを引数にとる
 #bulletin_boardはbulletin_board.pyのbulletin_boardクラスのインスタンス
     remove_task = taskA if taskA in task_list else taskB
     give_task = taskA if taskA not in task_list else taskB
 
     # 交換でのタスクの交換によるスラックタイムの差分・コストの変化を計算
-    slack_cost = calculate_differ_slack(task_list,remove_task,give_task)
+    slack_cost = calculate_differ_slack(task_list,remove_task,give_task,route,bulletin_board)
     # 交換でのタスクの交換によるover_windowの差分・コストの変化を計算
-    over_cost = caluculate_differ_over_window(task_list,remove_task,give_task)
+    over_cost = caluculate_differ_over_window(task_list,remove_task,give_task,route,bulletin_board)
     # 交換でのタスクの交換による距離の差分・コストの変化を計算
     distans_cost = calculate_differ_distance(route,remove_task,give_task,bulletin_board,task_list)
 
@@ -157,15 +157,15 @@ def calculate_slacktime(route):
         slack_time += max(task.late_start_time - task.earliest_start_time ,0)
     return slack_time
 
-def calculate_differ_slack(route,remove_task,add_task):
+def calculate_differ_slack(pac_list,remove,add,route,bulletin_board):
     #元のrouteのスラックタイムと，タスクの交換後のスラックタイムの差分を示す
     #routeはパッケージのリストに限る
     #remove_taskはrouteから削除するタスク
     #add_taskはrouteに追加するタスク
-    before_slack_time = calculate_slacktime(route)
-    changed_list = copy.deepcopy(route)
-    changed_list = remove_task(remove_task,changed_list)
-    changed_list = add_task(add_task,changed_list)
+    before_slack_time = calculate_slacktime(pac_list)
+    changed_list = copy.deepcopy(pac_list)
+    changed_list = remove_task(remove,changed_list)
+    changed_list = add_task(add,changed_list,route,bulletin_board)
     earliest_start_time_list(changed_list)
     latest_start_time_list(changed_list)
     after_slack_time = calculate_slacktime(changed_list)
@@ -181,15 +181,15 @@ def calculate_over_window(route):
     #due_dateトの引き算デいいのか議論の余地あり，最遅サービス開始時間でも
     return over_window  
         
-def caluculate_differ_over_window(route,remove_task,add_task):
+def caluculate_differ_over_window(pac_list,remove,add,route,bulletin_board):
     #元のrouteのover_windowと，タスクの交換後のover_windowの差分を示す
     #routeはパッケージのリストに限る
     #remove_taskはrouteから削除するタスク
     #add_taskはrouteに追加するタスク
-    before_over_window = calculate_over_window(route)
-    changed_list = copy.deepcopy(route)
-    changed_list = remove_task(remove_task,changed_list)
-    changed_list = add_task(add_task,changed_list)
+    before_over_window = calculate_over_window(pac_list)
+    changed_list = copy.deepcopy(pac_list)
+    changed_list = remove_task(remove,changed_list)
+    changed_list = add_task(add,changed_list,route,bulletin_board)
     earliest_start_time_list(changed_list)
     latest_start_time_list(changed_list)
     after_over_window = calculate_over_window(changed_list)
@@ -277,4 +277,32 @@ def least_cost_time_insertion_index(route,new_task,pac_list,bulletin_board):
         if best_position != None:
             return best_position
         return None
-    
+
+def remove_task(task,route):
+    #ルートはパッケージのリストに限る
+    #routeからtaskを一致するものをもつクラスを削除する
+    if task == None:
+        return route
+    for i in range(len(route)):
+        if route[i].task == task:
+            del route[i]
+            break
+    return route
+
+
+
+def add_task(task,pac_list,route,bulletin_board):
+    #routeはパッケージのリストに限る
+    #routeにtaskを追加する
+    if task == None:
+        return pac_list
+    index = least_cost_time_insertion_index(route,task,pac_list,bulletin_board)
+    if index == None:
+        for i in range(len(route)):
+            if pac_list[i].task.due_date > task.due_date:
+                index = i
+                break
+    if index == None:
+        return pac_list
+    pac_list.insert(index,pac_task(task))
+    return pac_list

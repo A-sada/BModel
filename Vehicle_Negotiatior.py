@@ -76,13 +76,13 @@ class VehicleNegotiator(SAONegotiator):
             if len(self.tasks) < 3:
                 if task_b == None:
                     return ResponseType.ACCEPT_OFFER
-                elif calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.bulletin_board,self.tasks) < 0:
+                elif calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board) < 0:
                     return ResponseType.ACCEPT_OFFER
                 else:
                     return ResponseType.REJECT_OFFER
                 
             if task_b != None:
-                cost = calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.bulletin_board,self.tasks) 
+                cost = calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board) 
                 if self.check_task(task_b) == True:
                     if cost < 0:
                         return ResponseType.ACCEPT_OFFER
@@ -109,14 +109,14 @@ class VehicleNegotiator(SAONegotiator):
         cost={}
         rt_list = []
         for pac in pac_list:
-            cost[pac.task] =calculate_cost_saving(self.arrival_time_list,pac.task,taskA,self.bulletin_board,self.tasks)
-        cost["0"] = calculate_cost_saving(self.arrival_time_list,None,taskA,self.bulletin_board,self.tasks)
+            cost[pac.task] =calculate_cost_saving(self.arrival_time_list,pac.task,taskA,self.tasks,self.bulletin_board)
+        cost["0"] = calculate_cost_saving(self.arrival_time_list,None,taskA,self.tasks,self.bulletin_board)
         sorted_cost = sorted(cost.items(), key=lambda x:x[1])
         for i in sorted_cost:
             if i[0] in remove_list:
                 remove_list.remove(i[0])
                 rt_list.append(i[0])
-        for i in remove_list:
+        for i in sorted_cost:
             if i[0] not in remove_list:
                 rt_list.append(i[0])
         self.remove_list = rt_list

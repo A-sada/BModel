@@ -1,0 +1,49 @@
+% ===== 卒業論文用LaTeXメインファイル(by HONDA) =====
+% 分割して作成しているTeXファイルを1つの文書として生成するためのファイル
+
+% 数式を中央寄せしたい場合は fleqn を削除する
+\documentclass[autodetect-engine,dvi=dvipdfmx,ja=standard,a4paper,fleqn,12pt]{bxjsreport}
+\usepackage{subfiles} % ファイル分割用のパッケージ
+\usepackage[bachelor]{tuats} % ページレイアウトの設定． 基本的に中身は触らないほうが安全
+\usepackage{mysettings} % 追加で色々設定をまとめておくためのファイル． 必要に応じて加筆すると良い
+
+% タイトルページ関連
+\title{藤田桂英研究室\LaTeX~テンプレート 2023} % 日本語タイトル
+\etitle{A \LaTeX~Template Files for Fujita Katsuhide Labratory} % 英語タイトル
+\author{苗字 名前} % 名前漢字表記
+\eauthor{your name} % 名前英語表記
+\enteryear{2022} % 入学年度
+\graduateyear{2023} % 卒業年度
+\studentnumber{12345678} % 学籍番号
+\date{YYYY年MM月DD日} % 提出日
+
+\begin{document}
+
+% ==== タイトルページと目次 ====
+\maketitle
+
+% ==== メインページ ====
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+% hoge.texを読み込む際は\subfile{hoge}とせよ．拡張子は不要．
+\subfile{manual}
+\subfile{hoge}
+
+% ==== 謝辞(acknowledgement.tex) ====
+\subfile{acknowledgement}
+
+% ==== 参考文献(reference.bib) ====
+\bibliography{reference}
+
+% ==== 付録 ====
+% chapterの前後を付録用に変更．
+% 普通は必要無いが，\titleformatでchapterの体裁を書き換えたら「第A章」のようになってしまったので，力技で修正．これで問題なく表示される．
+\appendix
+\renewcommand{\prechaptername}{付録}
+\renewcommand{\postchaptername}{}
+
+% 以下にTeXファイルを読み込んだ場合は「付録」となる．
+\subfile{hoge}
+
+\end{document}

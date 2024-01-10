@@ -1,0 +1,242 @@
+% 藤田桂英研究室栄光のLaTeXフォーマット (卒論・修論共通) update: 2023/11/29
+% \NeedsTeXFormat{pLaTeX2e}
+
+% ----------------------------------------
+% レイアウト設定に必須な外部パッケージ
+
+% 行間の設定
+\usepackage[onehalfspacing]{setspace}
+% \setstretch{1.3}
+
+% 上下左右のマージン
+\setpagelayout+{hmargin=25mm, vmargin=15mm}
+% \setpagelayout+{vmargin=25mm,top=25mm,bottom=15mm}
+% \renewcommand{\footnoterule}{\vspace{10pt}\noindent\rule{\linewidth}{0.5pt}\vspace{20pt}}
+
+% 見出しの見た目変更
+\usepackage{titlesec} 
+
+
+% ----------------------------------------
+% 変数の定義
+% 全形式共通
+\def\etitle#1{\def\@etitle{#1}}
+\def\eauthor#1{\def\@eauthor{#1}}
+\def\studentnumber#1{\def\@studentnumber{#1}}
+\def\submityear#1{\def\@submityear{#1}}
+\def\organization#1{\def\@organization{#1}}
+\def\papername#1{\def\@papername{#1}}
+
+% 卒業論文，修士論文共通
+\def\enteryear#1{\def\@enteryear{#1}}
+\def\supervisor#1{\def\@supervisor{#1}}  % 指導教員名
+\def\abstractpath#1{\def\@abstractpath{#1}}  % 要旨のTeXファイルがある場所
+\def\abstractlinespace#1{\def\@abstractlinespace{#1}}  % 要旨ページのヘッダにおける行間
+
+% 卒業論文のみ
+\def\profileimage#1{\def\@profileimage{#1}}  % 写真
+
+% タイトルなどのフォントサイズ設定
+% 1行に入り切らないときには調整してください
+\def\titlesize#1{\def\@titlesize{#1}}
+\def\etitlesize#1{\def\@etitlesize{#1}}
+\def\authorsize#1{\def\@authorsize{#1}}
+\def\eauthorsize#1{\def\@eauthorsize{#1}}
+
+% 年度の自動計算
+\newcounter{fiscalyear}
+\setcounter{fiscalyear}{\number\year}
+\ifnum\number\month<4 \addtocounter{fiscalyear}{-1} \fi
+
+% 変数のエイリアス
+\def\studentid{\studentnumber}
+\def\graduateyear{\submityear}
+
+% 変数のデフォルト値の設定
+\organization{東京農工大学 工学府 情報工学専攻}
+\supervisor{藤田 桂英 教授}
+\titlesize{\Huge}
+\etitlesize{\Large}
+\authorsize{\Huge}
+\eauthorsize{\Large}
+\profileimage{image/profile.jpg}
+\abstractpath{abstract}
+\abstractlinespace{2mm}
+\submityear{\the\value{fiscalyear}}
+
+% ----------------------------------------
+% デバッグ用変数とマクロの定義
+% \debugtrue，\debugfalseでデバッグのオンオフの切り替え
+% 使用方法: \ifdebug ~ (\else ~) \fi
+\newif\ifdebug \debugtrue
+\newcommand{\debugtitle}[1]{\ifdebug {\small\tt (#1)} \fi}
+
+% \showprofiletrue, \showprofilefalseでタイトルの写真表示のオンオフ切り替え
+\newif\ifshowprofile \showprofiletrue
+
+% \showfigurelisttrue, \showfigurelistfalseで図目次のオンオフ切り替え
+\newif\ifshowfigurelist \showfigurelisttrue
+
+% \showtablelisttrue, \showtablelistfalseで表目次のオンオフ切り替え
+\newif\ifshowtablelist \showtablelisttrue
+
+% ----------------------------------------
+% パッケージオプションの処理
+\newif\ifthbachelor \thbachelorfalse
+\newif\ifthmaster \thmasterfalse
+\newif\ifpresendoc \presendocfalse
+% pdshort: 短い形式の発表資料か，長い形式の発表資料か (デフォルト: 短い形式)
+\newif\if@pdshort \@pdshorttrue
+\DeclareOption{bachelor}{\thbachelortrue}
+\DeclareOption{master}{\thmastertrue}
+\DeclareOption{presendoc}{\presendoctrue \papername{\@submityear 年度修士論文概要}}
+\DeclareOption{m1}{\papername{中間発表予稿}}
+\DeclareOption{m2mid}{\@pdshortfalse}
+\DeclareOption{m2final}{\relax}  % 発表資料のデフォルト値
+\ProcessOptions\relax
+
+% オプションに基づいて処理
+\ifthbachelor
+  \organization{東京農工大学 工学部 知能情報システム工学科}
+  \papername{卒業論文}
+  \showprofilefalse
+\else \ifthmaster
+  \papername{修士論文}
+  \showprofilefalse
+\fi\fi
+
+% ----------------------------------------
+% 参考文献形式の設定 (BibTeX含む)
+\bibliographystyle{junsrt}
+\renewcommand{\bibname}{参考文献}
+
+% ----------------------------------------
+% 見出しの深さレベルの変更(これによりsubsubsectionまで利用可能)
+\setcounter{secnumdepth}{3}
+
+% ----------------------------------------
+% コマンド定義 
+
+% textbfの再定義
+\renewcommand{\textbf}[1]{{\bfseries\gtfamily\sffamily #1}}
+
+% 対外発表等一覧
+\newcommand{\externals}{
+  \newpage
+  {\huge\hspace{-1em}\textbf{対外発表等一覧}}
+  \bigskip
+}
+
+\newenvironment{externalsenum}[1]{
+  \begin{enumerate}
+  \renewcommand{\labelenumi}{[\textbf{#1\arabic{enumi}}]}
+}{
+  \end{enumerate}
+  \vspace{-\baselineskip}
+}
+
+
+% 見出しの見た目を調整(太字， Sans-Serif化)
+\titleformat{\chapter}
+  [display]
+  {\huge\gtfamily\bfseries\sffamily}
+  {\prechaptername\thechapter\postchaptername}
+  {10pt}
+  {\Huge}
+\titleformat*{\section}{\LARGE\gtfamily\bfseries\sffamily}
+\titleformat*{\subsection}{\Large\gtfamily\bfseries\sffamily}
+\titleformat*{\subsubsection}{\large\gtfamily\bfseries\sffamily}
+\titleformat{\paragraph}
+  [block]
+  {\jsParagraphMark\hspace{0.5em}\normalsize\gtfamily\bfseries\sffamily}
+  {}
+  {0.5em}
+  {\vspace{-1em}}
+  {}
+\titleformat*{\subparagraph}{\normalsize\gtfamily\bfseries\sffamily}
+
+% ----------------------------------------
+% タイトルページの定義
+% 概要と目次までここで設定している
+\ifpresendoc
+  \if@pdshort
+    \pagestyle{empty}
+  \else
+    \renewcommand{\externals}{
+      \bigskip
+      {\Large\hspace{-1em}\textbf{対外発表等一覧}}
+    }
+  \fi
+
+  \renewcommand{\maketitle}{
+    \begin{center}
+      {\large \@organization~\@papername} \\ \vspace{\@abstractlinespace}
+      {\large 題目}\,{\Large \textbf{\@title{}}} \\ \vspace{\@abstractlinespace}
+      {\large \@etitle{}}\smallskip
+      
+      {\large 学籍番号\, \@studentnumber{} \hspace{2em} 氏名\, \@author{} (\@eauthor{})}\medskip
+    \end{center}
+  }
+\else
+  \renewcommand\maketitle{
+    \begin{titlepage}
+      % ページ番号の無効化
+      \thispagestyle{empty}
+      % 1ページ目 (タイトル)
+      \begin{center}
+        {\@titlesize{} \@title{}} \\
+        \vspace{0.5em}
+        {\@etitlesize{} \@etitle{}} \\
+        \vspace{\ifshowprofile 1.6cm \else 5.0cm \fi}
+        {\@authorsize{} \@author{}} \\
+        {\@eauthorsize{} \@eauthor{}} \\
+        \vspace{0.5em}
+        {\Large (\@enteryear{}年度入学, \@studentnumber{})} \\
+        \vfill
+        \ifshowprofile
+          \includegraphics[width=0.3\linewidth]{\@profileimage} \\
+          \vspace{1.5cm}
+        \fi
+        {\Huge 指導教員 \@supervisor} \\
+        \vspace{1.6cm}
+        {\Large \@organization} \\
+        {\Large \@submityear{}年度\@papername} \\
+        \vspace{0.5em}
+        {\Large (\@date{}提出)} \\
+      \end{center}
+
+      % 2ページ目 (要旨)
+      \newpage
+      \thispagestyle{empty}
+      \begin{center}
+        {\large \@organization \@submityear{}年度 \@papername 要旨} \\ \vspace{\@abstractlinespace}
+        {\large 題目}{\Large \bfseries\gtfamily\sffamily \, \@title{}} \\ \vspace{\@abstractlinespace}
+        {\large \@etitle{}} \\ \vspace{\@abstractlinespace}
+        {\large 学籍番号 \@studentnumber{} 氏名 \@author{}(\@eauthor{})} \\ \vspace{\@abstractlinespace}
+        {\large 提出日 \@date{}} \\ \vspace{\@abstractlinespace}
+      \end{center}
+      \bigskip \input{\@abstractpath}
+
+      % 3ページ目 (目次)
+      \newpage
+      \setcounter{page}{1}
+      \pagenumbering{roman}
+      \setcounter{tocdepth}{2}
+      \tableofcontents
+
+      % 4ページ目 (図目次)
+      \ifshowfigurelist
+        \newpage
+        \listoffigures
+      \fi
+
+      % 5ページ目 (表目次)
+      \ifshowtablelist
+        \newpage
+        \listoftables
+      \fi
+    \end{titlepage}
+    % ページ番号形式を戻す
+    \pagenumbering{arabic}
+  }
+\fi

@@ -161,7 +161,7 @@ for negotiate_steps in range(N):
         if contract in contracts_signed.get(contract.vehicleA, []) and \
            contract in contracts_signed.get(contract.vehicleB, []):
             signed.append(contract)
-        
+    print(signed)    
     for sig in signed:
         AgentA = sig.vehicleA
         AgentB = sig.vehicleB

@@ -1,0 +1,70 @@
+% mysettings.sty：藤田桂英研 卒論用LaTeXテンプレートのスタイルファイル
+
+% このファイルに使いたいパッケージやマクロを記述しておけば，各ファイル作成時プリアンブルに
+% \usepackage{mysettings}を記述するだけで以下の内容を読み込むことが可能となる．
+
+% ======= TeXエンジンによって異なる設定 =======
+
+\usepackage{ifthen}
+\usepackage{ifluatex,ifuptex}
+\ifthenelse{\boolean{luatex}}{
+  % LuaLaTeXを使っている場合
+  \usepackage{graphicx} % 画像挿入に必要
+  \usepackage[unicode,hidelinks,pdfusetitle]{hyperref} % 相互参照にリンクを付ける
+  \usepackage[haranoaji,deluxe]{luatexja-preset}
+  \usepackage{luatexja-otf}
+}{
+  % pLaTeX, upLaTeXで共通
+  \usepackage[dvipdfmx]{graphicx} % 画像挿入に必要
+  \usepackage[dvipdfmx]{hyperref} % 相互参照にリンクを付ける
+  \usepackage{pxjahyper} % 相互参照にリンクを付ける 
+  \usepackage[deluxe]{otf} 
+  
+  % 欧文フォントの設定(レガシーTeX版)
+  % 欧文フォントを別のものに変えたい場合はあたかさんのページ(https://www.nagaoka-ct.ac.jp/ec/labo/visu/usb/tex/efonts.shtml)
+  % とThe LaTeX Font Catalogue(https://tug.org/FontCatalogue/)が参考になる．
+  % 和文フォントを変えるのはかなり面倒だが，最近デフォルトになった原ノ味フォントで十分．
+  \usepackage[T1]{fontenc}
+  \usepackage[scaled]{beramono} % タイプライタ体(モノスペースフォント)
+  \usepackage[scaled]{helvet} % Sans-Serif体(Helvetica)
+  % \usepackage[scaled=1.1]{biolinum} % Sans-Serif体(Optima)
+  
+  \ifthenelse{\boolean{nativeupTeX}}{
+  % upLaTeXを使っている場合
+
+}{
+  % pLaTeX を使っている場合
+
+}}
+
+
+% ======= どのエンジンでも共通の設定 =======
+
+% ==== 外部パッケージの読み込み ====
+
+\usepackage{amsmath} % 数学記号
+\usepackage{amssymb} % 数学記号
+\usepackage{bm} % 太字の数式表記(任意)
+\usepackage{ascmac} % 文章を枠で囲む
+\usepackage{float} % 図表の配置オプション H が利用可能
+\usepackage{siunitx} % 単位を綺麗に表示する
+\usepackage{url} % URL貼り付け用
+
+
+% ==== 出力に影響がない警告を無視 ====
+\usepackage{silence}
+\WarningFilter{latexfont}{Some font shapes}
+\WarningFilter{latexfont}{Font shape}
+\WarningFilter{caption}{Unknown document class}
+
+
+% ==== 相互参照の効率化 ====
+\newcommand{\tabref}[1]{\tablename~\ref{#1}}
+\newcommand{\tblref}[1]{\tablename~\ref{#1}} % tableの略記でtbl派もいる(寧ろ多い)らしいので一応2パターン用意した．
+\newcommand{\figref}[1]{\figurename~\ref{#1}}
+\newcommand{\equref}[1]{式(\ref{#1})}
+\newcommand{\chapref}[1]{\prechaptername~\ref{#1}\postchaptername}
+\newcommand{\secref}[1]{\ref{#1}節}
+\newcommand{\subsecref}[1]{\ref{#1}項}
+
+% ==== 以下に独自のマクロや設定を自由に記述する ====
