@@ -14,6 +14,11 @@ class Vehicle(Vehicle_BASE):
     def __init__(self, id, max_weight, dep_x, dep_y):
         super().__init__(id, max_weight, dep_x, dep_y)
 
+    def check_offer(self, task):
+        if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
+            return True
+        return self.check_task(task)
+        
     def offer_on_negotiation(self, run_cars, offer_id,vehicles):
         if len(self.tasks) < 5:
             for task in self.tasks:
