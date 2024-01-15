@@ -65,9 +65,11 @@ tasks.pop(0)
 random.shuffle(tasks)
 bulletin_board = Balletin(False,b_board,stay_areas_bb, max_xy,n,zones)
 # タスクを車両に割り当て（時間制約を含む）
-assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y)
+
+run_num = assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y)
 for car in vehicles:
     car.set_balletin(bulletin_board)
+    print(route_check(car.tasks,dep_x,dep_y))
 
 #車両とIDの紐付け＿辞書
 cars_id = {}
@@ -87,10 +89,6 @@ with open(filename, 'w') as f:
             count += 1
 
 
-#掲示板の共有
-for car in vehicles:
-    car.set_balletin(bulletin_board)
-    print(route_check(car.tasks,dep_x,dep_y))
 #車両routeの適正比較
 from collections import deque
 N=10
