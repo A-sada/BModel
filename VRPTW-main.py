@@ -7,7 +7,9 @@ from Negotiator import Nego1
 import math
 import pandas as pd
 import copy
+import time
 from balletin_are_search import create_time_zones
+from fun_for_test import route_check
 run_num = 0
 tasks = []  # タスクを保存するためのリスト
 vehicles = []
@@ -56,7 +58,7 @@ max_time = ll[1]
 n =(int)(math.sqrt((len(tasks) / 10)))
 n_zones = 7
 zones = create_time_zones(max_time,n_zones)
-print(max_xy)
+#print(max_xy)
 dep_x = tasks[0].x_coordinate
 dep_y = tasks[0].y_coordinate
 tasks.pop(0)
@@ -88,22 +90,31 @@ with open(filename, 'w') as f:
 #掲示板の共有
 for car in vehicles:
     car.set_balletin(bulletin_board)
-
+    print(route_check(car.tasks,dep_x,dep_y))
+#車両routeの適正比較
 from collections import deque
 N=10
 bulletin_board.max_steps = N
 for negotiate_steps in range(N):
+    start = time.time()
     for car in vehicles:
         car.first_step()
+    end = time.time()
+    time_diff = end - start
+    #print(f"first_step関数の実行時間: {time_diff} 秒")
     bulletin_board.n_steps += 1
 #全車両から交渉の提案を受け付ける
     Offer_list = deque()
     offer_id=0
+    start = time.time()
+
     for vehicle in vehicles:
         lst=vehicle.offer_on_negotiation(vehicles,offer_id,vehicles)
         Offer_list.append(lst)
         offer_id += len(lst)
-
+    end = time.time()
+    time_diff = end - start
+    #print(f"offer_on_negotiation関数の実行時間: {time_diff} 秒")
     # 交渉リストを初期化
     negotiation_list = []
     negotiation_id = 0
@@ -126,14 +137,15 @@ for negotiate_steps in range(N):
                 # 車両Aにオファーの受け入れを通知
                 cars_A.accept_offer(offer,negotiation_id)
                 negotiation_id += 1
-
+    print(f"交渉リストの長さ：{len(negotiation_list)}")
     agreements=[]
+    start = time.time()
     for neg in negotiation_list:
         neg.vehicleA.start_negotiation(neg.id)
         negA=neg.vehicleA.make_neg_agent()
         negB=neg.vehicleB.make_neg_agent()
         result=Nego1(neg.vehicleA,neg.vehicleB,negA,negB)
-        #print(result)
+        ##print(result)
         # 交渉が成功した場合には合意内容をリストに追加
         if result.agreement != None:
             agreement = result.agreement
@@ -141,27 +153,37 @@ for negotiate_steps in range(N):
             taskB = agreement['taskB']if 'taskB' in agreement else None
             agreements.append(Agree(neg.vehicleA,neg.vehicleB,taskA,taskB))
         neg.vehicleA.end_negotiation()
+    print(f"合意リストの長さ：{len(agreements)}")
+    end = time.time()
+    time_diff = end - start
+    #print(f"Nego1関数の実行時間: {time_diff} 秒")
     signed = []
     # 各車両ごとに関連する契約を格納するための辞書
     vehicle_agreements = {vehicle: [] for vehicle in vehicles}
-
     # 各契約をループし、関連する車両に契約を追加
     for agreement in agreements:
         if agreement.vehicleA in vehicle_agreements:
             vehicle_agreements[agreement.vehicleA].append(agreement)
         if agreement.vehicleB in vehicle_agreements:
             vehicle_agreements[agreement.vehicleB].append(agreement)
+    
 
+    
     contracts_signed = {}
+    start = time.time()
     #署名の実施
     for vehicle in vehicle_agreements:
         contracts_signed[vehicle] = vehicle.sign_contracts(vehicle_agreements[vehicle])
-    
+
+    end = time.time()
+    time_diff = end - start
+    #print(f"sign_contracts関数の実行時間: {time_diff} 秒")
     for contract in agreements:
-        if contract in contracts_signed.get(contract.vehicleA, []) and \
-           contract in contracts_signed.get(contract.vehicleB, []):
+        if contract in contracts_signed.get(contract.vehicleA, [10]) and \
+           contract in contracts_signed.get(contract.vehicleB, [10]):
             signed.append(contract)
-    print(signed)    
+    print(f"署名リストの長さ：{len(signed)}")
+    start = time.time()
     for sig in signed:
         AgentA = sig.vehicleA
         AgentB = sig.vehicleB
@@ -184,11 +206,17 @@ for negotiate_steps in range(N):
         if not exchange_successful:
             AgentA.tasks = routA
             AgentB.tasks = routB
-
+        else:
+            print('交換成功')
+            print(f'車両{AgentA.id}のルート：{AgentA.tasks}')
+            print(f'車両{AgentB.id}のルート：{AgentB.tasks}')
+    end = time.time()
+    time_diff = end - start
+    #print(f"交換の実行時間: {time_diff} 秒")
 
 
    # for cnt in signed:
-   #     print(cnt)
+   #     #print(cnt)
         
     #未稼働車両の削除
     zzz = 0

@@ -9,7 +9,6 @@ from balletin_are_search import calculate_dynamic_area
 from VRPTW_functions import find_time_zone,find_vehicles_in_neighboring_areas,find_vehicle_by_id, earliest_start_time_list, latest_start_time_list, euclidean_distance
 from classes import Offer,Agree,pac_task,Task
 import copy
- 
 
 class Vehicle(Vehicle_BASE):
 #TypeA
@@ -18,9 +17,8 @@ class Vehicle(Vehicle_BASE):
 
     def check_offer(self, task):
         if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-
             return True
-        return self.is_task_assignable_with_or_tools(task,self,self.dep_x,self.dep_y)
+        return self.check_task(task)
         
     def offer_on_negotiation(self, run_cars, offer_id,vehicles):
         if len(self.tasks) < 3:
@@ -130,72 +128,36 @@ class Vehicle(Vehicle_BASE):
         min_cost ={}
         min_cost_agreement = {}
         signed = []
-
+        cost_border = 0
+        if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
+            cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
+        else:
+            cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps - 300
         for agreements in list:
             task = agreements.taskA if agreements.taskA in self.tasks else None
             if task == None:
                 task = agreements.taskB if agreements.taskB in self.tasks else None
-            if task != None:
-                if task not in min_cost:
-                    min_cost[task] = [100000]
-                    min_cost_agreement[task] = []
+            else:
 
             #各タスクについて，もっともコストの低い合意結果とコストを対応させて記録する
-                cost = self.calculate_cost_saving(agreements)
+                cost = -1
 
-                if cost != None:
-                    #min_costにtaskがない場合，min_costに追加
-                    if task not in min_cost:
-                        min_cost[task].insert(0,cost)
-                        min_cost_agreement[task].insert(0,agreements)  
-                    #min_costにtaskがある場合，コストが小さい方をmin_costに追加
-                    elif min_cost[task][0] > cost:
-                        min_cost[task].insert(0,cost)
-                        min_cost_agreement[task].insert(0,agreements)
-            #計算したコストが閾値以下であれば合意する
-        for task in min_cost:
-            #閾値は時間帯によって変化する
-            #閾値は変数
-            cost_border = 0
-            if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-                cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
-            else:
-                cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps - 300
+                if cost < cost_border:
+                    if agreements not in signed:
+                        signed.append(agreements)
 
-            if min_cost[task][0] < cost_border:
-                if min_cost_agreement[task][0] not in signed:
-                    signed.append(min_cost_agreement[task][0])
-            if len(min_cost[task])>2:
-                if min_cost[task][1] < cost_border:
-                    if min_cost_agreement[task][1] not in signed:
-                        signed.append(min_cost_agreement[task][1])
-                if len(min_cost[task])>4:
-                    if min_cost[task][2] < cost_border:
-                        if min_cost_agreement[task][2] not in signed:
-                            signed.append(min_cost_agreement[task][2]) 
-                if len(min_cost[task])>6:
-                    if min_cost[task][3] < cost_border:
-                        if min_cost_agreement[task][3] not in signed:
-
-                            signed.append(min_cost_agreement[task][3])
-                if len(min_cost[task])>8:
-                    if min_cost[task][4] < cost_border:
-                        if min_cost_agreement[task][4] not in signed:
-                            signed.append(min_cost_agreement[task][4])
-        ##print(f"車両ごとの署名リストの長さ：{len(signed)}")
-        return signed
+        return list
     
 
 
     # この関数は特定の合意結果のコスト削減を計算します。
     def calculate_cost_saving(self,agreements: Agree):
-        cost_saving = 0
+
         remove_task = agreements.taskA if agreements.taskA in self.tasks else agreements.taskB
         give_task = agreements.taskA if agreements.taskA not in self.tasks else agreements.taskB
 
         # 交換でのタスクの交換によるスラックタイムの差分・コストの変化を計算
         slack_cost = self.calculate_differ_slack(self.tasks,remove_task,give_task)
-
         # 交換でのタスクの交換によるover_windowの差分・コストの変化を計算
         over_cost = self.caluculate_differ_over_window(self.tasks,remove_task,give_task)
         # 交換でのタスクの交換による距離の差分・コストの変化を計算
@@ -221,7 +183,6 @@ class Vehicle(Vehicle_BASE):
         slack_time = 0
         for task in route:
             slack_time += max(task.late_start_time - task.earliest_start_time ,0)
-            #print(task.late_start_time - task.earliest_arrival_time)
         return slack_time
     
     def calculate_differ_slack(self,route,remove_task,add_task):
@@ -289,7 +250,7 @@ class Vehicle(Vehicle_BASE):
     
     def least_cost_time_insertion_index(self , new_task):
         if not isinstance(new_task, Task):  # 仮定として Task というクラスが存在するとします。
-            ##print("エラー: 'new_task' が Task オブジェクトではありません。")
+            print("エラー: 'new_task' が Task オブジェクトではありません。")
             return False
         min_cost = float('inf')
         best_position = None
@@ -360,7 +321,7 @@ class Vehicle(Vehicle_BASE):
         return route
 
     def first_step(self):
-        self.arrival_time_list=[]
+        self.arrival_time_list
         for task in self.tasks:
             self.arrival_time_list.append(pac_task(task))
         earliest_start_time_list(self.arrival_time_list)
@@ -385,7 +346,7 @@ class Vehicle(Vehicle_BASE):
         #コストが最小となる場所に挿入する
     def add(self, new_task):
         index = None
-        if self.current_weight + new_task.weight > self.max_weight + 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
+        if self.current_weight + new_task.weight > self.max_weight + 0 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
             return False
         if new_task in self.tasks:
             return False
@@ -397,9 +358,9 @@ class Vehicle(Vehicle_BASE):
                     index = i
                     break
         if index != None:
-
             route.insert(index,new_task)
             self.arrival_time_list.insert(index,pac_task(new_task))
+            self.current_weight += new_task.weight
         if new_task in self.tasks:
             return True
         else:
@@ -408,6 +369,7 @@ class Vehicle(Vehicle_BASE):
     def remove(self, task):
         if task in self.tasks:
             self.tasks.remove(task)
+            self.current_weight -= task.weight
             #self.arrival_time_listからリスト内のクラスにtaskがある場合，そのクラスを削除する
             for i in range(len(self.arrival_time_list)):
                 if self.arrival_time_list[i].task == task:
@@ -442,69 +404,3 @@ class Vehicle(Vehicle_BASE):
                 rt_list.append(i[0])
         self.over_task = rt_list
         return 
-    
-    def is_task_assignable_with_or_tools(vehicle, new_task,dep_x,dep_y):
-        global max_weight
-        # タスクがまだ割り当てられていない場合や、車両にまだタスクが割り当てられていない場合
-        if len(vehicle.tasks) > 4:
-            return False
-        if vehicle.current_weight + new_task.weight > max_weight:
-            return False
-        current_time = 0
-        # 車両の開始位置から新しいタスクまでの距離を計算
-        start_task = Task(0, dep_x, dep_y, 0, 0, 0, 0)  # 仮の開始位置
-        travel_time_from_start = max(euclidean_distance(start_task, new_task),new_task.ready_time)
-        #if travel_time_from_start <= new_task.due_date :
-        if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, vehicle.tasks[0]) <= vehicle.tasks[0].due_date: 
-            return True
-        current_task = vehicle.tasks[0]
-        next_task = None
-        pre_task = None
-        # 各タスク間での新しいタスクの挿入を試みる
-        for i in range(len(vehicle.tasks) - 1):
-            current_task = vehicle.tasks[i]
-            next_task = vehicle.tasks[i + 1]
-            if i == 0:
-                current_time = max(euclidean_distance(start_task, current_task),current_task.ready_time)
-                current_time += current_task.service_time
-                # 現在のタスクの終了時間を計算
-            else:
-                current_time = max(current_time + euclidean_distance(pre_task,current_task),current_task.ready_time)
-                #current_timeをカレントタスクの開始時間に更新
-                current_time += current_task.service_time
-            
-            # 新しいタスクへの移動に必要な時間を計算
-            travel_time_to_new_task = euclidean_distance(current_task, new_task)
-
-            # 新しいタスクのサービス終了時間を計算
-            new_task_end_time = current_time + travel_time_to_new_task + new_task.service_time
-
-            # 次のタスクへの移動に必要な時間を計算
-            travel_time_to_next_task = euclidean_distance(new_task, next_task)
-
-            # 次のタスクの開始時間を計算
-            next_task_start_time = new_task_end_time + travel_time_to_next_task
-            
-            pre_task = current_task
-            # 新しいタスクがdue_date前に終了し、次のタスクが時間内に開始できるかどうかを確認
-            if current_time + travel_time_to_new_task <= new_task.due_date and next_task_start_time <= next_task.due_date:
-                return True
-        #current_timeは最後から二番目のタスクの終了時間
-        if next_task != None:
-            current_task = next_task
-            current_time = max(current_time + euclidean_distance(pre_task,current_task),current_task.ready_time)
-            current_time += current_task.service_time
-            next_task = new_task
-            current_time = max(current_time + euclidean_distance(current_task, next_task),next_task.ready_time)
-            if current_time <= next_task.due_date:
-                return True
-        else:
-            current_task = vehicle.tasks[-1]
-            pre_task = current_task
-            current_time = max(current_time + euclidean_distance(pre_task,current_task),current_task.ready_time)
-            current_time += current_task.service_time
-            next_task = new_task
-            current_time = max(current_time + euclidean_distance(current_task, next_task),next_task.ready_time)
-            if current_time <= next_task.due_date:
-                return True
-        return False

@@ -51,7 +51,7 @@ class Vehicle_BASE:
         if self.check_offer(offer.get("taskB")) == True:
             return True
         else:
-            return False
+            return True
     
     def make_propose(self):
         return {"taskA": self.propose_task, "taskB": self.tasks[random.randint(0,len(self.tasks - 1))]}

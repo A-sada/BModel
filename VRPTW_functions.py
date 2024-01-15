@@ -56,14 +56,14 @@ def find_neighboring_areas(area):
 
     return neighboring_areas
 
-def find_vehicles_in_neighboring_areas(time, area, df):
+def find_vehicles_in_neighboring_areas(time_zone, area, df):
     neighbors = find_neighboring_areas(area)
     vehicles = []
-    if time in df.columns:
+    if time_zone in df.columns:
         for neighbor in neighbors:
             # neighborがtime列に存在するかチェック
-            if neighbor in df[time].values:
-                matching_vehicles = df[df[time] == neighbor]['id'].tolist()
+            if neighbor in df[time_zone].values:
+                matching_vehicles = df[df[time_zone] == neighbor]['id'].tolist()
                 vehicles.extend(matching_vehicles)
 
     return vehicles
@@ -82,16 +82,19 @@ def earliest_start_time_list(tasks : list[pac_task]):
     i = 0 
     for task in tasks:
         if i == 0:
-            task.earliest_start_time = current_time
+            task.earliest_start_time = task.task.ready_time
+            current_time = task.task.ready_time
             current_time += task.task.service_time
             i += 1
             pre_task =task
         else:
             current_time += euclidean_distance(pre_task.task,task.task)
-
-            task.earliest_start_time = current_time
+            task.earliest_arrival_time = current_time
+            task.earliest_start_time = max(current_time,task.task.ready_time)
+            current_time = task.earliest_start_time
             current_time += task.task.service_time
             pre_task =task
+    return
             
 
 
@@ -106,7 +109,8 @@ def calculate_earliest_start_time(previous_task, current_task,current_time):
     return current_time
 
 def latest_start_time_list(tasks : list[pac_task]):
-    current_time = tasks[-1].task.due_date
+    
+    current_time = tasks[len(tasks)-1].task.due_date
     i = 0
     for task in reversed(tasks):
         if i == 0:
@@ -116,7 +120,6 @@ def latest_start_time_list(tasks : list[pac_task]):
         else:
             current_time -= euclidean_distance(pre_task.task,task.task)
             current_time -= task.task.service_time
-            task.late_start_time = current_time
             current_time = min(current_time,task.task.due_date)
             task.late_start_time = current_time
             pre_task = task
@@ -170,7 +173,7 @@ def calculate_differ_slack(pac_list,remove,add,route,bulletin_board):
     latest_start_time_list(changed_list)
     after_slack_time = calculate_slacktime(changed_list)
     #スラックタイムが増えれば負の値を返す   
-    return before_slack_time - after_slack_time
+    return after_slack_time - before_slack_time
     #スラックタイムが増えれば負の値を返す
 
 
@@ -306,3 +309,14 @@ def add_task(task,pac_list,route,bulletin_board):
         return pac_list
     pac_list.insert(index,pac_task(task))
     return pac_list
+
+def cal_travel_time(route,dep_x,dep_y):
+    time = 0
+    current_time = 0
+    for i in range(len(route)):
+        if i == 0:
+            time += euclidean_distance(Task(0,dep_x,dep_y,0,0,0,0),route[i])
+            time += route[i].service_time
+        else:
+            time += euclidean_distance(route[i-1],route[i])
+            time += route[i].service_time

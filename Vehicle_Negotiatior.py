@@ -45,7 +45,6 @@ class VehicleNegotiator(SAONegotiator):
         # 提案のロジックを実装
         self.n_steps += 1
         task_a = None
-        
         if self.is_vehicle_a:
             # 車両Aの場合、taskAの提案のみ行う
             offer = {"taskA": self.task_a, "taskB": None}
@@ -59,7 +58,9 @@ class VehicleNegotiator(SAONegotiator):
             #task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
             #task_b = None  # 一方的に受け取る場合
             if self.tasks:
-                task_b = self.remove_list.pop(0)  # taskBをランダムに選択
+                if len(self.remove_list)    == 0:
+                    task_b = None
+                task_b = self.remove_list.pop(0)  
                 if task_b == "0":
                     task_b = None
             offer ={"taskA": task_a, "taskB": task_b}
@@ -93,9 +94,7 @@ class VehicleNegotiator(SAONegotiator):
             else:
                 return ResponseType.ACCEPT_OFFER
         else:
-            if self.n_steps == 10:
-                return ResponseType.ACCEPT_OFFER
-        return ResponseType.REJECT_OFFER
+            return ResponseType.REJECT_OFFER
     
     def make_remove_list(self,taskA):
         remove_list = []
