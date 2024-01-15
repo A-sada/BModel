@@ -71,6 +71,8 @@ def is_task_assignable_with_or_tools(vehicle, new_task,dep_x,dep_y):
         if current_time <= next_task.due_date:
             return True
     return False
+
+
 def check_task(vehicle,new_task,dep_x,dep_y):
     dep_task = Task(0, dep_x, dep_y, 0, 0, 0, 0)  # 仮の開始位置
     current_time = 0
@@ -112,6 +114,57 @@ def check_task(vehicle,new_task,dep_x,dep_y):
     current_task = vehicle.tasks[-1]
     travel_time_to_new_task = euclidean_distance(current_task, new_task)
     if current_time + travel_time_to_new_task <= new_task.due_date:
+        return True
+    return False
+def task_add(vehicle, new_task,dep_x, dep_y):
+    dep_task = Task(0, dep_x, dep_y, 0, 0, 0, 0)  # 仮の開始位置
+    current_time = 0
+    travel_time_from_start = max(euclidean_distance(dep_task, new_task),new_task.ready_time)
+    if travel_time_from_start <= new_task.due_date :
+        if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, vehicle.tasks[0]) <= vehicle.tasks[0].due_date: 
+            vehicle.tasks.insert(0,new_task)
+            vehicle.current_weight += new_task.weight
+            return 
+            return True
+    current_task = vehicle.tasks[0]
+    next_task = None
+    pre_task = None
+    current_time = max(euclidean_distance(dep_task, current_task),current_task.ready_time)
+    current_time += current_task.service_time
+    if len(vehicle.tasks) != 1:
+        for i in range(1,len(vehicle.tasks)-1):
+            #current_timeはcurrent_taskへの到着時刻となっている
+            current_task = vehicle.tasks[i]
+            next_task = vehicle.tasks[i + 1]
+            current_time = max(current_time, current_task.ready_time)
+            current_time += current_task.service_time
+            
+            # 新しいタスクへの移動に必要な時間を計算
+            travel_time_to_new_task = euclidean_distance(current_task, new_task)
+
+            # 新しいタスクのサービス終了時間を計算
+            new_task_end_time = max(current_time + travel_time_to_new_task,new_task.ready_time) + new_task.service_time
+
+            # 次のタスクへの移動に必要な時間を計算
+            travel_time_to_next_task = euclidean_distance(new_task, next_task)
+
+            # 次のタスクの開始時間を計算
+            next_task_start_time = new_task_end_time + travel_time_to_next_task
+            
+            if current_time + travel_time_to_new_task <= new_task.due_date and next_task_start_time <= next_task.due_date:
+                vehicle.tasks.insert(i+1,new_task)
+                vehicle.current_weight += new_task.weight
+
+                return True
+            pre_task = current_task
+            # 新しいタスクがdue_date前に終了し、次のタスクが時間内に開始できるかどうかを確認
+            current_time = euclidean_distance(current_task, next_task)
+    
+    current_task = vehicle.tasks[-1]
+    travel_time_to_new_task = euclidean_distance(current_task, new_task)
+    if current_time + travel_time_to_new_task <= new_task.due_date:
+        vehicle.tasks.append(new_task)
+        vehicle.current_weight += new_task.weight
         return True
     return False
 
@@ -198,7 +251,7 @@ def assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y):
         else:
             apt_cars=[]
             for car in vehicles:
-                if is_task_assignable_with_or_tools(car, task,dep_x, dep_y) == True:
+                if check_task(car, task,dep_x, dep_y) == True:
                     apt_cars.append(car)
             if len(apt_cars) == 0:
                 new_vehicle = Vehicle(run_num, max_weight,dep_x, dep_y)
@@ -207,10 +260,10 @@ def assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y):
                 vehicles.append(new_vehicle)
                 run_num += 1
             elif len(apt_cars)==1:
-                task_go(apt_cars[0],task,dep_x,dep_y)
+                task_add(apt_cars[0],task,dep_x,dep_y)
             else:
                 rad = random.randint(0, len(apt_cars)-1)
-                task_go(apt_cars[rad],task,dep_x,dep_y)
+                task_add(apt_cars[rad],task,dep_x,dep_y)
 
 
 def read_task(filename, tasks):
@@ -244,6 +297,8 @@ def read_task(filename, tasks):
                 parts = line.split()
                 id, x_coordinate, y_coordinate, weight, ready_time, due_date, service_time = map(int, parts)
                 task = Task(id, x_coordinate, y_coordinate, weight, ready_time, due_date, service_time)
+                print(task.ready_time)
+                print(task.due_date)
                 tasks.append(task)
 
                 # 最大値の更新
