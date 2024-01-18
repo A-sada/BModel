@@ -7,6 +7,8 @@ from VRPTW_functions import euclidean_distance
 from fun_for_test import route_check   
 
 def check_task(vehicle,new_task,dep_x,dep_y):
+    if vehicle.current_weight + new_task.weight > vehicle.max_weight:
+        return False
     for i in range(len(vehicle.tasks)):
         route = copy.deepcopy(vehicle.tasks)
         route.insert(i,new_task)
@@ -17,6 +19,8 @@ def check_task(vehicle,new_task,dep_x,dep_y):
 
 
 def task_add(vehicle, new_task,dep_x, dep_y):
+    if vehicle.current_weight + new_task.weight > vehicle.max_weight:
+        return False
     for i in range(len(vehicle.tasks)):
         route = copy.deepcopy(vehicle.tasks)
         route.insert(i,new_task)

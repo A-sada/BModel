@@ -93,7 +93,7 @@ with open(filename, 'w') as f:
 
 #車両routeの適正比較
 from collections import deque
-N=5
+N=100
 bulletin_board.max_steps = N
 for negotiate_steps in range(N):
     start = time.time()
@@ -212,8 +212,11 @@ for negotiate_steps in range(N):
             AgentB.tasks = routB
         else:
             print('交換成功')
-            print(f'車両{AgentA.id}のルート：{AgentA.tasks}')
-            print(f'車両{AgentB.id}のルート：{AgentB.tasks}')
+            print(taskA)
+            print(taskB)
+
+        #    print(f'車両{AgentA.id}のルート：{AgentA.tasks}')
+        #    print(f'車両{AgentB.id}のルート：{AgentB.tasks}')
     end = time.time()
     time_diff = end - start
     #print(f"交換の実行時間: {time_diff} 秒")

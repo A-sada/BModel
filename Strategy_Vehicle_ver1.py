@@ -142,8 +142,10 @@ class Vehicle(Vehicle_BASE):
 
             #各タスクについて，もっともコストの低い合意結果とコストを対応させて記録する
                 cost = self.calculate_cost_saving(agreements)
-
                 if cost != None:
+                    if cost < 0:
+                        if agreements not in signed:
+                            signed.append(agreements)
                     #min_costにtaskがない場合，min_costに追加
                     if task not in min_cost:
                         min_cost[task].insert(0,cost)
@@ -154,34 +156,36 @@ class Vehicle(Vehicle_BASE):
                         min_cost_agreement[task].insert(0,agreements)
             #計算したコストが閾値以下であれば合意する
         for task in min_cost:
-            #閾値は時間帯によって変化する
-            #閾値は変数
-            cost_border = 0
-            if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-                cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
-            else:
-                cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +10
-            #print(f"車両{self.id}のコスト閾値は{cost_border}")
-            if min_cost[task][0] < cost_border:
-                if min_cost_agreement[task][0] not in signed:
-                    signed.append(min_cost_agreement[task][0])
-            if len(min_cost[task])>2:
-                if min_cost[task][1] < cost_border:
-                    if min_cost_agreement[task][1] not in signed:
-                        signed.append(min_cost_agreement[task][1])
-                if len(min_cost[task])>4:
-                    if min_cost[task][2] < cost_border:
-                        if min_cost_agreement[task][2] not in signed:
-                            signed.append(min_cost_agreement[task][2]) 
-                if len(min_cost[task])>6:
-                    if min_cost[task][3] < cost_border:
-                        if min_cost_agreement[task][3] not in signed:
+            if self.current_weight + task.weight < self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
+                #閾値は時間帯によって変化する
+                #閾値は変数
+                cost_border = 0
+                if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
+                    cost_border = 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
+                else:
+                    cost_border = 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +10
+                #print(f"車両{self.id}のコスト閾値は{cost_border}")
+                #print(min_cost[task][0])
+                if min_cost[task][0] < cost_border:
+                    if min_cost_agreement[task][0] not in signed:
+                        signed.append(min_cost_agreement[task][0])
+                if len(min_cost[task])>2:
+                    if min_cost[task][1] < cost_border:
+                        if min_cost_agreement[task][1] not in signed:
+                            signed.append(min_cost_agreement[task][1])
+                    if len(min_cost[task])>4:
+                        if min_cost[task][2] < cost_border:
+                            if min_cost_agreement[task][2] not in signed:
+                                signed.append(min_cost_agreement[task][2]) 
+                    if len(min_cost[task])>6:
+                        if min_cost[task][3] < cost_border:
+                            if min_cost_agreement[task][3] not in signed:
 
-                            signed.append(min_cost_agreement[task][3])
-                if len(min_cost[task])>8:
-                    if min_cost[task][4] < cost_border:
-                        if min_cost_agreement[task][4] not in signed:
-                            signed.append(min_cost_agreement[task][4])
+                                signed.append(min_cost_agreement[task][3])
+                    if len(min_cost[task])>8:
+                        if min_cost[task][4] < cost_border:
+                            if min_cost_agreement[task][4] not in signed:
+                                signed.append(min_cost_agreement[task][4])
         #print(f"車両ごとの署名リストの長さ：{len(signed)}")
         return signed
     
@@ -384,7 +388,7 @@ class Vehicle(Vehicle_BASE):
         #コストが最小となる場所に挿入する
     def add(self, new_task):
         index = None
-        if self.current_weight + new_task.weight > self.max_weight + 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
+        if self.current_weight + new_task.weight > self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
             return False
         if new_task in self.tasks:
             return False
@@ -395,8 +399,8 @@ class Vehicle(Vehicle_BASE):
                 if route[i].due_date > new_task.due_date:
                     index = i
                     break
-        if index != None:
-
+        if index != None and self.current_weight + new_task.weight < self.max_weight + 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
+            self.current_weight += new_task.weight
             route.insert(index,new_task)
             self.arrival_time_list.insert(index,pac_task(new_task))
         if new_task in self.tasks:
@@ -410,6 +414,7 @@ class Vehicle(Vehicle_BASE):
             #self.arrival_time_listからリスト内のクラスにtaskがある場合，そのクラスを削除する
             for i in range(len(self.arrival_time_list)):
                 if self.arrival_time_list[i].task == task:
+                    self.current_weight -= task.weight
                     del self.arrival_time_list[i]
                     break
             return True
