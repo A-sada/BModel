@@ -69,6 +69,7 @@ class VehicleNegotiator(SAONegotiator):
         return offer
     
     def respond(self, state: SAOState, offer: Outcome, source: str):
+        cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +100
         # 応答のロジックを実装
         if not self.initial_offer_received:
             self.initial_offer_received = offer  # 初回の提案を保存
@@ -80,6 +81,13 @@ class VehicleNegotiator(SAONegotiator):
                 if task_b == None:
                     return ResponseType.ACCEPT_OFFER
                 elif calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board) < 0:
+                    return ResponseType.ACCEPT_OFFER
+                else:
+                    return ResponseType.REJECT_OFFER
+            else:
+                cost = calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board) 
+
+                if cost < cost_border:
                     return ResponseType.ACCEPT_OFFER
                 else:
                     return ResponseType.REJECT_OFFER
