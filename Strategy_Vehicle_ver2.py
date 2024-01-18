@@ -194,7 +194,7 @@ class Vehicle(Vehicle_BASE):
         changed_list = copy.deepcopy(self.arrival_time_list)
         changed_list = self.remove_task(remove_task,changed_list)
         changed_list = self.add_task(add_task,changed_list)
-        earliest_start_time_list(changed_list)
+        earliest_start_time_list(changed_list,self.dep_x,self.dep_y)
         latest_start_time_list(changed_list)
         after_slack_time = self.calculate_slacktime(changed_list)
         #スラックタイムが増えれば負の値を返す   
@@ -218,7 +218,7 @@ class Vehicle(Vehicle_BASE):
         changed_list = copy.deepcopy(self.arrival_time_list)
         changed_list = self.remove_task(remove_task,changed_list)
         changed_list = self.add_task(add_task,changed_list)
-        earliest_start_time_list(changed_list)
+        earliest_start_time_list(changed_list,self.dep_x,self.dep_y)
         latest_start_time_list(changed_list)
         after_over_window = self.calculate_over_window(changed_list)
         return after_over_window - before_over_window
@@ -324,7 +324,7 @@ class Vehicle(Vehicle_BASE):
         self.arrival_time_list
         for task in self.tasks:
             self.arrival_time_list.append(pac_task(task))
-        earliest_start_time_list(self.arrival_time_list)
+        earliest_start_time_list(self.arrival_time_list,self.dep_x,self.dep_y)
         latest_start_time_list(self.arrival_time_list)
     
     def add_task(self,task,route : List[pac_task]):

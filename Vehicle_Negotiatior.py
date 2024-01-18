@@ -28,7 +28,7 @@ import random
 
 # VehicleNegotiatorクラスの定義（NegMASのSAONegotiatorの代わりに基本的なPythonクラスを使用）
 class VehicleNegotiator(SAONegotiator):
-    def __init__(self, vehicle_id, tasks, is_vehicle_a, task_a=None, preferences: Preferences | None = None, ufun: BaseUtilityFunction | None = None, name: str | None = None, parent: Controller | None = None, owner: Agent | None = None, id: str | None = None, type_name: str | None = None, can_propose: bool = True):
+    def __init__(self, vehicle_id, tasks, is_vehicle_a, task_a, preferences: Preferences | None = None, ufun: BaseUtilityFunction | None = None, name: str | None = None, parent: Controller | None = None, owner: Agent | None = None, id: str | None = None, type_name: str | None = None, can_propose: bool = True):
         self.vehicle_id = vehicle_id  # 車両ID
         self.tasks = tasks            # タスクのリスト（ルート）
         self.is_vehicle_a = is_vehicle_a  # 車両Aかどうかを示すフラグ
@@ -51,11 +51,11 @@ class VehicleNegotiator(SAONegotiator):
         else:
             if self.n_steps == 1:
                 # 車両Bの場合、初回に受け取った提案からtaskAを取得
-                task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
+                task_a = self.initial_offer_received["taskA"]
                 task_b = None
                 self.make_remove_list(task_a)
             # 車両Bの場合、初回に受け取った提案からtaskAを取得
-            #task_a = self.initial_offer_received["taskA"] if self.initial_offer_received else None
+            task_a = self.initial_offer_received["taskA"] 
             #task_b = None  # 一方的に受け取る場合
             if self.tasks:
                 if len(self.remove_list)    == 0:
@@ -65,6 +65,7 @@ class VehicleNegotiator(SAONegotiator):
                     task_b = None
             offer ={"taskA": task_a, "taskB": task_b}
         #return super().propose(offer)
+        #print(offer)
         return offer
     
     def respond(self, state: SAOState, offer: Outcome, source: str):
@@ -73,8 +74,9 @@ class VehicleNegotiator(SAONegotiator):
             self.initial_offer_received = offer  # 初回の提案を保存
         # その後の応答ロジックをここに実装
         if self.is_vehicle_a:
-            task_b = offer["taskB"] if self.initial_offer_received else None
+            task_b = offer["taskB"]
             if len(self.tasks) < 3:
+                cost=calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board)
                 if task_b == None:
                     return ResponseType.ACCEPT_OFFER
                 elif calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board) < 0:
@@ -84,6 +86,7 @@ class VehicleNegotiator(SAONegotiator):
                 
             if task_b != None:
                 cost = calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board) 
+                #print(cost)
                 if self.check_task(task_b) == True:
                     if cost < 0:
                         return ResponseType.ACCEPT_OFFER
@@ -94,6 +97,7 @@ class VehicleNegotiator(SAONegotiator):
             else:
                 return ResponseType.ACCEPT_OFFER
         else:
+            #print("B")
             return ResponseType.REJECT_OFFER
     
     def make_remove_list(self,taskA):
@@ -107,7 +111,7 @@ class VehicleNegotiator(SAONegotiator):
         #pac_listからi番目のタスクを削除したときのコストの増減を計算する
         cost={}
         rt_list = []
-        for pac in pac_list:
+        for pac in self.arrival_time_list:
             cost[pac.task] =calculate_cost_saving(self.arrival_time_list,pac.task,taskA,self.tasks,self.bulletin_board)
         cost["0"] = calculate_cost_saving(self.arrival_time_list,None,taskA,self.tasks,self.bulletin_board)
         sorted_cost = sorted(cost.items(), key=lambda x:x[1])

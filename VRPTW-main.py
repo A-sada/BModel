@@ -9,7 +9,8 @@ import pandas as pd
 import copy
 import time
 from balletin_are_search import create_time_zones
-from fun_for_test import route_check
+from fun_for_test import route_check,check_arriva_list
+from VRPTW_functions import *
 run_num = 0
 tasks = []  # タスクを保存するためのリスト
 vehicles = []
@@ -65,11 +66,12 @@ tasks.pop(0)
 random.shuffle(tasks)
 bulletin_board = Balletin(False,b_board,stay_areas_bb, max_xy,n,zones)
 # タスクを車両に割り当て（時間制約を含む）
-
+bulletin_board.dep_x = dep_x
+bulletin_board.dep_y = dep_y
 run_num = assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y)
 for car in vehicles:
     car.set_balletin(bulletin_board)
-    print(route_check(car.tasks,dep_x,dep_y))
+
 
 #車両とIDの紐付け＿辞書
 cars_id = {}
@@ -91,12 +93,16 @@ with open(filename, 'w') as f:
 
 #車両routeの適正比較
 from collections import deque
-N=10
+N=5
 bulletin_board.max_steps = N
 for negotiate_steps in range(N):
     start = time.time()
     for car in vehicles:
         car.first_step()
+#        print(f"車両{car.id}のルート：{car.tasks}")
+#        for task in car.tasks:
+#            print(task.ready_time)
+#            print(task.due_date)
     end = time.time()
     time_diff = end - start
     #print(f"first_step関数の実行時間: {time_diff} 秒")
@@ -135,7 +141,7 @@ for negotiate_steps in range(N):
                 # 車両Aにオファーの受け入れを通知
                 cars_A.accept_offer(offer,negotiation_id)
                 negotiation_id += 1
-    print(f"交渉リストの長さ：{len(negotiation_list)}")
+    #print(f"交渉リストの長さ：{len(negotiation_list)}")
     agreements=[]
     start = time.time()
     for neg in negotiation_list:
@@ -151,7 +157,7 @@ for negotiate_steps in range(N):
             taskB = agreement['taskB']if 'taskB' in agreement else None
             agreements.append(Agree(neg.vehicleA,neg.vehicleB,taskA,taskB))
         neg.vehicleA.end_negotiation()
-    print(f"合意リストの長さ：{len(agreements)}")
+    #print(f"合意リストの長さ：{len(agreements)}")
     end = time.time()
     time_diff = end - start
     #print(f"Nego1関数の実行時間: {time_diff} 秒")
@@ -180,7 +186,7 @@ for negotiate_steps in range(N):
         if contract in contracts_signed.get(contract.vehicleA, [10]) and \
            contract in contracts_signed.get(contract.vehicleB, [10]):
             signed.append(contract)
-    print(f"署名リストの長さ：{len(signed)}")
+    #print(f"署名リストの長さ：{len(signed)}")
     start = time.time()
     for sig in signed:
         AgentA = sig.vehicleA
@@ -219,6 +225,7 @@ for negotiate_steps in range(N):
     #未稼働車両の削除
     zzz = 0
     for car in vehicles:
+        
         if len(car.tasks)== 0:
             no_runs.append(car)
             #vehicles.remove(car)
@@ -236,6 +243,23 @@ for negotiate_steps in range(N):
         else:
             car.bulletin_update(max_xy,max_time,zones,n)
         zzz += 1
+        flag =0
+        for pac in car.arrival_time_list:
+            if pac.late_start_time - pac.earliest_start_time <= 0:
+                flag ==1
+        if flag == 1:
+            for task in car.arrival_time_list:
+                if task.late_start_time < 0:
+                    print(task.late_start_time)
+                    print(car.tasks)
+                    print("car id {seld.id}")
+                    for task_pac in car.arrival_time_list:
+                        print(task_pac.task.ready_time)
+                        print(task_pac.task.due_date)
+                        print(task_pac.task.service_time)
+                        print(task_pac.task.x_coordinate)
+                        print(task_pac.task.y_coordinate)
+                        print("PPPPPP")
     
 
 #掲示板の更新
@@ -253,7 +277,9 @@ for negotiate_steps in range(N):
             f.write(f"Vehicle {vehicle.id} has tasks {task_ids} with total weight {vehicle.current_weight}.\n")
             if len(task_ids) == 1:
                 count += 1
+        f.write(f"CVN {len(vehicles)} CRT {sum_travel_time(vehicles)}\n")
     filename = os.path.join(directory_name, f"TimeBoard-{negotiate_steps}.txt")
     bulletin_board.time_board.to_csv(filename,sep='\t',index = False)
     filename = os.path.join(directory_name, f"AreaBoard-{negotiate_steps}.txt")
     bulletin_board.area_board.to_csv(filename,sep='\t',index = False)
+

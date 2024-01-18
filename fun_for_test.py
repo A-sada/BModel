@@ -20,3 +20,10 @@ def route_check(route : list[Vehicle],dep_x,dep_y):
             current_time += current_task.service_time
         pre_task = current_task
     return True
+
+def check_arriva_list(arrival_list):
+    print("2A")
+    for task in arrival_list:
+        if (task.late_start_time - task.earliest_start_time) <= 0:
+            return False
+    return True

@@ -134,6 +134,7 @@ class Vehicle_BASE:
         neg_task = self.next_nego.get(neg_id)
         if neg_task != None:
             self.propose_task = neg_task
+            #print("propose_task",self.propose_task)
             #propse_taskはタスクリストのインデックス
             self.offer_flag = True
             #自分が提案した交渉ならフラグがたつ

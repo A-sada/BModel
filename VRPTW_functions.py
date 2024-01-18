@@ -74,11 +74,12 @@ def find_vehicle_by_id(vehicle_id, vehicles):
             return vehicle
     return None  # IDと一致するvehicleが見つからなかった場合
 
-def earliest_start_time_list(tasks : list[pac_task]):
+def earliest_start_time_list(tasks : list[pac_task],dep_x,dep_y):
     #リストで計算する
+    dep_task = Task(0,dep_x,dep_y,0,0,0,0)
     if len(tasks) == 0:
         return
-    current_time = tasks[0].task.ready_time
+    current_time = max(euclidean_distance(dep_task,tasks[0].task),tasks[0].task.ready_time)
     i = 0 
     for task in tasks:
         if i == 0:
@@ -92,6 +93,7 @@ def earliest_start_time_list(tasks : list[pac_task]):
             task.earliest_arrival_time = current_time
             task.earliest_start_time = max(current_time,task.task.ready_time)
             current_time = task.earliest_start_time
+
             current_time += task.task.service_time
             pre_task =task
     return
@@ -108,22 +110,32 @@ def calculate_earliest_start_time(previous_task, current_task,current_time):
         current_task.earliest_arrival_time = current_time
     return current_time
 
-def latest_start_time_list(tasks : list[pac_task]):
-    
-    current_time = tasks[len(tasks)-1].task.due_date
-    i = 0
-    for task in reversed(tasks):
-        if i == 0:
-            task.late_start_time = current_time
-            pre_task =task
-            i += 1
-        else:
-            current_time -= euclidean_distance(pre_task.task,task.task)
-            current_time -= task.task.service_time
-            current_time = min(current_time,task.task.due_date)
-            task.late_start_time = current_time
-            pre_task = task
-    return
+def latest_start_time_list(tasks):
+    # 関数内でユークリッド距離を計算するヘルパー関数
+
+    # 最後のタスク（最も遅い締切時間を持つタスク）の最遅開始時間を設定（サービス開始の締切時間とする）
+    last_task = tasks[-1]
+    last_task.late_start_time = last_task.task.due_date
+
+    # 残りのタスクに対して逆順に最遅開始時間を計算
+    for i in range(len(tasks) - 2, -1, -1):
+        current_task = tasks[i]
+        next_task = tasks[i + 1]
+
+        # 次のタスクまでの移動時間を計算
+        time_to_next_task = euclidean_distance(current_task.task, next_task.task)
+
+        # 最遅開始時間を計算
+        # 次のタスクの最遅開始時間から、移動時間と現在のタスクのサービス時間を引く
+        current_task.late_start_time = min(next_task.late_start_time - time_to_next_task - current_task.task.service_time, 
+                                           current_task.task.due_date)
+
+    # 更新されたタスクリストを返却
+    return tasks
+
+# 注: この関数は単純化のためにユークリッド距離を使用しています。
+# 実際のアプリケーションでは、より複雑な距離計算や時間制約の考慮が必要です。
+
 import copy
 
 
@@ -131,8 +143,15 @@ import copy
 def calculate_cost_saving(task_list,taskA,taskB,route,bulletin_board):
 #この関数を利用する車両のリスト（パックリスト）と，交換するタスクたち，bulletin_boardを引数にとる
 #bulletin_boardはbulletin_board.pyのbulletin_boardクラスのインスタンス
-    remove_task = taskA if taskA in task_list else taskB
-    give_task = taskA if taskA not in task_list else taskB
+    #print("taskA",taskA)
+    #print("taskB",taskB)
+    #print(route)
+    remove_task = taskA if taskA in route else None
+    remove_task = taskB if taskB in route else None
+
+    give_task = taskA if taskA not in route else None
+    give_task = taskB if taskB not in route else None
+
 
     # 交換でのタスクの交換によるスラックタイムの差分・コストの変化を計算
     slack_cost = calculate_differ_slack(task_list,remove_task,give_task,route,bulletin_board)
@@ -142,6 +161,7 @@ def calculate_cost_saving(task_list,taskA,taskB,route,bulletin_board):
     distans_cost = calculate_differ_distance(route,remove_task,give_task,bulletin_board,task_list)
 
     slack_late = 0.5
+
 
     #over_lateは，時間が進むにつれて値を大きくする
     #現在の時間はbulletin_board.n_stepで取得できる
@@ -169,7 +189,7 @@ def calculate_differ_slack(pac_list,remove,add,route,bulletin_board):
     changed_list = copy.deepcopy(pac_list)
     changed_list = remove_task(remove,changed_list)
     changed_list = add_task(add,changed_list,route,bulletin_board)
-    earliest_start_time_list(changed_list)
+    earliest_start_time_list(changed_list,bulletin_board.dep_x,bulletin_board.dep_y)
     latest_start_time_list(changed_list)
     after_slack_time = calculate_slacktime(changed_list)
     #スラックタイムが増えれば負の値を返す   
@@ -190,35 +210,37 @@ def caluculate_differ_over_window(pac_list,remove,add,route,bulletin_board):
     #remove_taskはrouteから削除するタスク
     #add_taskはrouteに追加するタスク
     before_over_window = calculate_over_window(pac_list)
+    #print("before_over_window",before_over_window)
     changed_list = copy.deepcopy(pac_list)
     changed_list = remove_task(remove,changed_list)
     changed_list = add_task(add,changed_list,route,bulletin_board)
-    earliest_start_time_list(changed_list)
+    earliest_start_time_list(changed_list,bulletin_board.dep_x,bulletin_board.dep_y)
     latest_start_time_list(changed_list)
     after_over_window = calculate_over_window(changed_list)
+    #print("after_over_window",after_over_window)
     return after_over_window - before_over_window
     #over_windowが減れば負の値を返す
 
 def calculate_differ_distance(route,taskA,taskB,bulletin_board,pac_list):
-    route = copy.deepcopy(route)
-    if taskA in route:
-        index = route.index(taskA)
-    elif taskB in route:
-        index = route.index(taskB)
-    else:
-        return 0
-
+    #route = copy.deepcopy(route)
     distance = 0
-    #削除するタスクの前後の移動時間
-    distance -= euclidean_distance(route[index-1],route[index])
-    distance -= euclidean_distance(route[index],route[index+1])
+    
+    if taskA != None:
+        #削除するタスクの前後の移動時間
+        index = route.index(taskA)
+        if index > 0:
+            distance -= euclidean_distance(route[index-1],route[index])
+        if index < len(route)-1:
+            distance -= euclidean_distance(route[index],route[index+1])
     #タスク追加の前後の移動時間
-    taskB = taskA if taskA not in route else taskB
-    index = least_cost_time_insertion_index(route,taskB,pac_list,bulletin_board)
-    if index == None:
-        return 0
-    distance += euclidean_distance(route[index-1],taskB)
-    distance += euclidean_distance(route[index],taskB)
+    if taskB != None:
+        index = least_cost_time_insertion_index(route,taskB,pac_list,bulletin_board)
+        if index == None:
+            return distance
+        if index > 0:
+            distance += euclidean_distance(route[index-1],taskB)
+        if index < len(route):
+            distance += euclidean_distance(route[index],taskB)
     return distance
     #距離が短くなれば負の値を返す
 
@@ -238,7 +260,7 @@ def least_cost_time_insertion_index(route,new_task,pac_list,bulletin_board):
             if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, route[0]) <= route[0].due_date: 
                 list = copy.deepcopy(pac_list)
                 list.insert(0,pac_task(new_task))
-                earliest_start_time_list(list)
+                earliest_start_time_list(list,bulletin_board.dep_x,bulletin_board.dep_y)
                 latest_start_time_list(list)
                 cost = calculate_slacktime(list)
                 if min_cost > cost:
@@ -270,7 +292,7 @@ def least_cost_time_insertion_index(route,new_task,pac_list,bulletin_board):
             if current_task_end_time + travel_time_to_new_task <= new_task.due_date and next_task_start_time <= next_task.due_date:
                 list = copy.deepcopy(pac_list)
                 list.insert(i+1,pac_task(new_task))
-                earliest_start_time_list(list)
+                earliest_start_time_list(list,bulletin_board.dep_x,bulletin_board.dep_y)  
                 latest_start_time_list(list)
                 cost = calculate_slacktime(list)
                 if min_cost > cost:
@@ -316,7 +338,12 @@ def cal_travel_time(route,dep_x,dep_y):
     for i in range(len(route)):
         if i == 0:
             time += euclidean_distance(Task(0,dep_x,dep_y,0,0,0,0),route[i])
-            time += route[i].service_time
         else:
             time += euclidean_distance(route[i-1],route[i])
-            time += route[i].service_time
+    return time
+
+def sum_travel_time(car_list):
+    time = 0
+    for car in car_list:
+        time += cal_travel_time(car.tasks,car.dep_x,car.dep_y)
+    return time

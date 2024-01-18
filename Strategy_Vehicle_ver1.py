@@ -20,7 +20,7 @@ class Vehicle(Vehicle_BASE):
         if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
 
             return True
-        return self.is_task_assignable_with_or_tools(task,self,self.dep_x,self.dep_y)
+        return self.is_task_assignable_with_or_tools(task,self.dep_x,self.dep_y)
         
     def offer_on_negotiation(self, run_cars, offer_id,vehicles):
         if len(self.tasks) < 3:
@@ -160,8 +160,8 @@ class Vehicle(Vehicle_BASE):
             if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
                 cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
             else:
-                cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps - 300
-
+                cost_border = 1000 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +10
+            #print(f"車両{self.id}のコスト閾値は{cost_border}")
             if min_cost[task][0] < cost_border:
                 if min_cost_agreement[task][0] not in signed:
                     signed.append(min_cost_agreement[task][0])
@@ -182,7 +182,7 @@ class Vehicle(Vehicle_BASE):
                     if min_cost[task][4] < cost_border:
                         if min_cost_agreement[task][4] not in signed:
                             signed.append(min_cost_agreement[task][4])
-        ##print(f"車両ごとの署名リストの長さ：{len(signed)}")
+        #print(f"車両ごとの署名リストの長さ：{len(signed)}")
         return signed
     
 
@@ -190,8 +190,11 @@ class Vehicle(Vehicle_BASE):
     # この関数は特定の合意結果のコスト削減を計算します。
     def calculate_cost_saving(self,agreements: Agree):
         cost_saving = 0
-        remove_task = agreements.taskA if agreements.taskA in self.tasks else agreements.taskB
-        give_task = agreements.taskA if agreements.taskA not in self.tasks else agreements.taskB
+        remove_task = agreements.taskA if agreements.taskA in self.tasks else None
+        remove_task = agreements.taskB if agreements.taskB in self.tasks else None
+
+        give_task = agreements.taskA if agreements.taskA not in self.tasks else None
+        give_task = agreements.taskB if agreements.taskB not in self.tasks else None
 
         # 交換でのタスクの交換によるスラックタイムの差分・コストの変化を計算
         slack_cost = self.calculate_differ_slack(self.tasks,remove_task,give_task)
@@ -202,7 +205,6 @@ class Vehicle(Vehicle_BASE):
         distans_cost = self.calculate_differ_distance(remove_task,give_task)
 
         slack_late = 0.5
-
         #over_lateは，時間が進むにつれて値を大きくする
         #現在の時間はself.bulletin_board.n_stepで取得できる
         #最大時間はself.bulletin_board.max_stepで取得できる
@@ -211,17 +213,13 @@ class Vehicle(Vehicle_BASE):
         over_late = 10 * (self.bulletin_board.n_steps / self.bulletin_board.max_steps) ** 2
         distance_late = 0.5
         cost_saving = slack_late * slack_cost + over_late * over_cost + distance_late * distans_cost
+        #print(f"車両{self.id}のコスト削減は{cost_saving}")
         return cost_saving
 
-    def sign_contract(self, partner, taskA, taskB):
-
-        return super().sign_contract(partner, taskA, taskB)
-     
     def calculate_slacktime(self,route):
         slack_time = 0
         for task in route:
             slack_time += max(task.late_start_time - task.earliest_start_time ,0)
-            #print(task.late_start_time - task.earliest_arrival_time)
         return slack_time
     
     def calculate_differ_slack(self,route,remove_task,add_task):
@@ -233,8 +231,9 @@ class Vehicle(Vehicle_BASE):
         changed_list = copy.deepcopy(self.arrival_time_list)
         changed_list = self.remove_task(remove_task,changed_list)
         changed_list = self.add_task(add_task,changed_list)
-        earliest_start_time_list(changed_list)
+        earliest_start_time_list(changed_list,self.dep_x,self.dep_y)
         latest_start_time_list(changed_list)
+
         after_slack_time = self.calculate_slacktime(changed_list)
         #スラックタイムが増えれば負の値を返す   
         return before_slack_time - after_slack_time
@@ -257,32 +256,32 @@ class Vehicle(Vehicle_BASE):
         changed_list = copy.deepcopy(self.arrival_time_list)
         changed_list = self.remove_task(remove_task,changed_list)
         changed_list = self.add_task(add_task,changed_list)
-        earliest_start_time_list(changed_list)
+        earliest_start_time_list(changed_list,self.dep_x,self.dep_y)
         latest_start_time_list(changed_list)
         after_over_window = self.calculate_over_window(changed_list)
         return after_over_window - before_over_window
         #over_windowが減れば負の値を返す
     
     def calculate_differ_distance(self,taskA,taskB):
-        route = copy.deepcopy(self.tasks)
-        if taskA in route:
-            index = route.index(taskA)
-        elif taskB in route:
-            index = route.index(taskB)
-        else:
-            return 0
-
+        route = self.tasks
         distance = 0
-        #削除するタスクの前後の移動時間
-        distance -= euclidean_distance(route[index-1],route[index])
-        distance -= euclidean_distance(route[index],route[index+1])
+        if taskA != None:
+            #削除するタスクの前後の移動時間
+            index = route.index(taskA)
+            if index > 0:
+                distance -= euclidean_distance(route[index-1],route[index])
+            if index < len(route)-1:
+                distance -= euclidean_distance(route[index],route[index+1])
         #タスク追加の前後の移動時間
-        taskB = taskA if taskA not in route else taskB
-        index = self.least_cost_time_insertion_index(taskB)
-        if index == None:
-            return 0
-        distance += euclidean_distance(route[index-1],taskB)
-        distance += euclidean_distance(route[index],taskB)
+        if taskB != None:
+
+            index = self.least_cost_time_insertion_index(taskB)
+            if index == None:
+                return distance
+            if index > 0:
+                distance += euclidean_distance(route[index-1],taskB)
+            if index < len(route):
+                distance += euclidean_distance(route[index],taskB)
         return distance
         #距離が短くなれば負の値を返す
 
@@ -363,7 +362,7 @@ class Vehicle(Vehicle_BASE):
         self.arrival_time_list=[]
         for task in self.tasks:
             self.arrival_time_list.append(pac_task(task))
-        earliest_start_time_list(self.arrival_time_list)
+        earliest_start_time_list(self.arrival_time_list,self.dep_x,self.dep_y)
         latest_start_time_list(self.arrival_time_list)
     
     def add_task(self,task,route : List[pac_task]):
@@ -444,7 +443,7 @@ class Vehicle(Vehicle_BASE):
         return 
     
     def is_task_assignable_with_or_tools(vehicle, new_task,dep_x,dep_y):
-        global max_weight
+        max_weight = vehicle.max_weight
         # タスクがまだ割り当てられていない場合や、車両にまだタスクが割り当てられていない場合
         if len(vehicle.tasks) > 4:
             return False
