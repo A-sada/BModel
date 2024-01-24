@@ -176,7 +176,7 @@ class Vehicle(Vehicle_BASE):
                 #閾値は変数
                 cost_border = 0
                 if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-                    cost_border = 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
+                    cost_border = -10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
                 else:
                     cost_border = -10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps 
                 #print(f"車両{self.id}のコスト閾値は{cost_border}")
@@ -341,13 +341,14 @@ class Vehicle(Vehicle_BASE):
         best_position = None
         min_distance = 100000000000
         route = copy.deepcopy(self.tasks)
-        route.insert(0,Task(0,0,self.dep_x,self.dep_y,0,0,0))
-        route.append(Task(0,0,self.dep_x,self.dep_y,0,0,0))
+        check_route = copy.deepcopy(route)
         for i in range(len(route) + 1):
             new_tasks = route[:i] + [new_task] + route[i:]
             current_distance = calculate_total_distance(new_tasks)
+            check_route = copy.deepcopy(route)
+            check_route.insert(i,new_task)
             if current_distance < min_distance:
-                if self.route_check(new_tasks,self.dep_x,self.dep_y) == True:
+                if self.route_check(check_route,self.dep_x,self.dep_y) != True:
                     min_distance = current_distance
                     best_position = i
 
@@ -420,18 +421,19 @@ class Vehicle(Vehicle_BASE):
                 self.current_weight += new_task.weight
                 route.append(new_task)
                 self.arrival_time_list.append(pac_task(new_task))
-        if index != None and self.current_weight + new_task.weight < self.max_weight + 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
+        if index != None and self.current_weight + new_task.weight < \
+                    self.max_weight + 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
             self.current_weight += new_task.weight
-            route.insert(index,new_task)
+            self.tasks.insert(index,new_task)
             self.arrival_time_list.insert(index,pac_task(new_task))
         if new_task in self.tasks:
             return True
         else:
-            # print(index)
-            # print(self.tasks)
-            # print(self.current_weight)
-            # print(self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps)
-            # print(new_task.weight)
+            print(index)
+            print(self.tasks)
+            print(self.current_weight)
+            print(self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps)
+            print(new_task.weight)
             return False
     
     def remove(self, task):

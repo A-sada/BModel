@@ -204,7 +204,7 @@ for negotiate_steps in range(N):
     sorted_signed = sorted(signed, key=lambda x: x.cost)
     signed = []
     signed = [x.agre for x in sorted_signed]    
-    print(f"署名リストの長さ：{len(signed)}")
+    #print(f"署名リストの長さ：{len(signed)}")
     start = time.time()
     for sig in signed:
         AgentA = sig.vehicleA
@@ -255,10 +255,10 @@ for negotiate_steps in range(N):
             # print(taskB)
             # print(AgentA.tasks)
             # print(AgentB.tasks)
-        else:
+        # else:
             # print('交換成功')
-            print(taskA)
-            print(taskB)
+            # print(taskA)
+            # print(taskB)
 
 
         #    print(f'車両{AgentA.id}のルート：{AgentA.tasks}')
