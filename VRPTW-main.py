@@ -63,7 +63,7 @@ zones = create_time_zones(max_time,n_zones)
 dep_x = tasks[0].x_coordinate
 dep_y = tasks[0].y_coordinate
 tasks.pop(0)
-random.shuffle(tasks)
+#random.shuffle(tasks)
 bulletin_board = Balletin(False,b_board,stay_areas_bb, max_xy,n,zones)
 # タスクを車両に割り当て（時間制約を含む）
 bulletin_board.dep_x = dep_x
@@ -147,7 +147,11 @@ for negotiate_steps in range(N):
     for neg in negotiation_list:
         neg.vehicleA.start_negotiation(neg.id)
         negA=neg.vehicleA.make_neg_agent()
+        negA.current_weight = neg.vehicleA.current_weight
         negB=neg.vehicleB.make_neg_agent()
+        negA.max_weight = neg.vehicleA.max_weight
+        negB.max_weight = neg.vehicleB.max_weight
+        negB.current_weight = neg.vehicleB.current_weight
         result=Nego1(neg.vehicleA,neg.vehicleB,negA,negB)
         ##print(result)
         # 交渉が成功した場合には合意内容をリストに追加
@@ -183,42 +187,71 @@ for negotiate_steps in range(N):
     time_diff = end - start
     #print(f"sign_contracts関数の実行時間: {time_diff} 秒")
     for contract in agreements:
-        if contract in contracts_signed.get(contract.vehicleA, [10]) and \
+        if contract in contracts_signed.get(contract.vehicleA, [10]) or \
            contract in contracts_signed.get(contract.vehicleB, [10]):
             signed.append(contract)
-    #print(f"署名リストの長さ：{len(signed)}")
+    # print(f"署名リストの長さ：{len(signed)}")
+
     start = time.time()
     for sig in signed:
         AgentA = sig.vehicleA
         AgentB = sig.vehicleB
         taskA = sig.taskA
         taskB = sig.taskB
-        routA = copy.deepcopy(AgentA.tasks)
-        routB = copy.deepcopy(AgentB.tasks)
-        
+        routeA =[]
+        routeB =[]
+        for task in AgentA.tasks:
+            routeA.append(task)
+            
+        for task in AgentB.tasks:
+            routeB.append(task)
+        A_weiht = AgentA.current_weight
+        B_weiht = AgentB.current_weight
         exchange_successful = False
         if taskB is None:
             if AgentA.pop(taskA) :
                 if AgentB.add(taskA) :
                     exchange_successful = True
         # 交換が成功したかどうかを追跡するためのフラグ
-        elif AgentA.pop(taskA) and AgentB.pop(taskB) :
-            if AgentB.add(taskB)  and AgentB.add(taskA) :
-                exchange_successful = True
+        # elif AgentA.pop(taskA) and AgentB.pop(taskB) :
+        #     if AgentB.add(taskB)  and AgentB.add(taskA) :
+        #         exchange_successful = True
+        if AgentA.pop(taskA):
+            if AgentB.pop(taskB):
+                if AgentB.add(taskA):
+                    if AgentA.add(taskB):
+                        exchange_successful = True
+        #             else:
+        #                 print("AgentA.add(taskB)失敗")
+                
+        #         else:
+        #             print("AgentB.ADD(taskA)失敗")
+        #     else:
+        #         print("AgentB.pop(taskB)失敗")
+        # else:
+        #     print("AgentA.pop(taskA)失敗")
 
         # 交換が成功しなかった場合、元に戻す
         if not exchange_successful:
-            AgentA.tasks = routA
-            AgentB.tasks = routB
-        else:
-            print('交換成功')
-            print(taskA)
-            print(taskB)
+            AgentA.tasks = routeA
+            AgentB.tasks = routeB
+            AgentA.current_weight = A_weiht
+            AgentB.current_weight = B_weiht
+            # print('交換失敗')
+            # print(taskA)
+            # print(taskB)
+            # print(AgentA.tasks)
+            # print(AgentB.tasks)
+        # else:
+        #     # print('交換成功')
+            # print(taskA)
+            # print(taskB)
+
 
         #    print(f'車両{AgentA.id}のルート：{AgentA.tasks}')
         #    print(f'車両{AgentB.id}のルート：{AgentB.tasks}')
-    end = time.time()
-    time_diff = end - start
+    # end = time.time()
+    # time_diff = end - start
     #print(f"交換の実行時間: {time_diff} 秒")
 
 
@@ -250,19 +283,19 @@ for negotiate_steps in range(N):
         for pac in car.arrival_time_list:
             if pac.late_start_time - pac.earliest_start_time <= 0:
                 flag ==1
-        if flag == 1:
-            for task in car.arrival_time_list:
-                if task.late_start_time < 0:
-                    print(task.late_start_time)
-                    print(car.tasks)
-                    print("car id {seld.id}")
-                    for task_pac in car.arrival_time_list:
-                        print(task_pac.task.ready_time)
-                        print(task_pac.task.due_date)
-                        print(task_pac.task.service_time)
-                        print(task_pac.task.x_coordinate)
-                        print(task_pac.task.y_coordinate)
-                        print("PPPPPP")
+        # if flag == 1:
+        #     for task in car.arrival_time_list:
+        #         if task.late_start_time < 0:
+        #             print(task.late_start_time)
+        #             print(car.tasks)
+        #             print("car id {seld.id}")
+        #             for task_pac in car.arrival_time_list:
+        #                 print(task_pac.task.ready_time)
+        #                 print(task_pac.task.due_date)
+        #                 print(task_pac.task.service_time)
+        #                 print(task_pac.task.x_coordinate)
+        #                 print(task_pac.task.y_coordinate)
+        #                 print("PPPPPP")
     
 
 #掲示板の更新
@@ -285,4 +318,5 @@ for negotiate_steps in range(N):
     bulletin_board.time_board.to_csv(filename,sep='\t',index = False)
     filename = os.path.join(directory_name, f"AreaBoard-{negotiate_steps}.txt")
     bulletin_board.area_board.to_csv(filename,sep='\t',index = False)
+    print(sum_travel_time(vehicles))
 

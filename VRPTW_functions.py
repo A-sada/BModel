@@ -340,6 +340,7 @@ def cal_travel_time(route,dep_x,dep_y):
             time += euclidean_distance(Task(0,dep_x,dep_y,0,0,0,0),route[i])
         else:
             time += euclidean_distance(route[i-1],route[i])
+    time += euclidean_distance(route[-1],Task(0,dep_x,dep_y,0,0,0,0))
     return time
 
 def sum_travel_time(car_list):

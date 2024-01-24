@@ -93,6 +93,14 @@ class Vehicle(Vehicle_BASE):
         # 最もタスクが多いクラスタ以外に分類されたタスクのリスト
         other_cluster_tasks = [task for task, cluster in zip(self.tasks, task_clusters) if cluster != most_common_cluster]
         
+        if self.current_weight >= self.max_weight:
+            wei = self.max_weight/len(self.tasks)
+
+            for task in self.tasks:
+                if task.weight >= wei:
+                    if task not in other_cluster_tasks:
+                        other_cluster_tasks.append(task)
+
 
         for task in other_cluster_tasks:
             vehicles_in_neighbors=[]
@@ -108,8 +116,7 @@ class Vehicle(Vehicle_BASE):
                 if car != None:
                     ofe=Offer(offer_id,self.id,car.id,task)
                     offer_id += 1
-                    self.offer_nego_list.append(ofe)
-                    
+                    self.offer_nego_list.append(ofe)        
         #list_return = copy.deepcopy(self.offer_nego_list)
         return self.offer_nego_list
 
@@ -143,9 +150,9 @@ class Vehicle(Vehicle_BASE):
             #各タスクについて，もっともコストの低い合意結果とコストを対応させて記録する
                 cost = self.calculate_cost_saving(agreements)
                 if cost != None:
-                    if cost < 0:
-                        if agreements not in signed:
-                            signed.append(agreements)
+                    # if cost < 0:
+                    #     if agreements not in signed:
+                    #         signed.append(agreements)
                     #min_costにtaskがない場合，min_costに追加
                     if task not in min_cost:
                         min_cost[task].insert(0,cost)
@@ -156,7 +163,7 @@ class Vehicle(Vehicle_BASE):
                         min_cost_agreement[task].insert(0,agreements)
             #計算したコストが閾値以下であれば合意する
         for task in min_cost:
-            if self.current_weight + task.weight < self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
+            if self.current_weight + task.weight < self.max_weight + 0 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
                 #閾値は時間帯によって変化する
                 #閾値は変数
                 cost_border = 0
@@ -187,7 +194,9 @@ class Vehicle(Vehicle_BASE):
                             if min_cost_agreement[task][4] not in signed:
                                 signed.append(min_cost_agreement[task][4])
         #print(f"車両ごとの署名リストの長さ：{len(signed)}")
+        # print(signed)
         return signed
+
     
 
 
@@ -364,10 +373,13 @@ class Vehicle(Vehicle_BASE):
 
     def first_step(self):
         self.arrival_time_list=[]
+        self.current_weight = 0
         for task in self.tasks:
             self.arrival_time_list.append(pac_task(task))
+            self.current_weight += task.weight
         earliest_start_time_list(self.arrival_time_list,self.dep_x,self.dep_y)
         latest_start_time_list(self.arrival_time_list)
+
     
     def add_task(self,task,route : List[pac_task]):
         #routeはパッケージのリストに限る
@@ -388,8 +400,6 @@ class Vehicle(Vehicle_BASE):
         #コストが最小となる場所に挿入する
     def add(self, new_task):
         index = None
-        if self.current_weight + new_task.weight > self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
-            return False
         if new_task in self.tasks:
             return False
         route = self.tasks
@@ -399,13 +409,23 @@ class Vehicle(Vehicle_BASE):
                 if route[i].due_date > new_task.due_date:
                     index = i
                     break
-        if index != None and self.current_weight + new_task.weight < self.max_weight + 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
+        if index == len(route):
+            if self.current_weight + new_task.weight < self.max_weight + 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
+                self.current_weight += new_task.weight
+                route.append(new_task)
+                self.arrival_time_list.append(pac_task(new_task))
+        if index != None and self.current_weight + new_task.weight < self.max_weight + 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
             self.current_weight += new_task.weight
             route.insert(index,new_task)
             self.arrival_time_list.insert(index,pac_task(new_task))
         if new_task in self.tasks:
             return True
         else:
+            # print(index)
+            # print(self.tasks)
+            # print(self.current_weight)
+            # print(self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps)
+            # print(new_task.weight)
             return False
     
     def remove(self, task):
@@ -447,6 +467,15 @@ class Vehicle(Vehicle_BASE):
         self.over_task = rt_list
         return 
     
+    def insert_cost(self,pac_list,route):
+        slack_cost = self.calculate_slacktime(pac_list)
+        over_cost = self.calculate_over_window(pac_list)
+        distance_cost = self.calculate_distance(route)
+        return slack_cost + over_cost + distance_cost
+
+
+
+        
     def is_task_assignable_with_or_tools(vehicle, new_task,dep_x,dep_y):
         max_weight = vehicle.max_weight
         # タスクがまだ割り当てられていない場合や、車両にまだタスクが割り当てられていない場合

@@ -38,6 +38,9 @@ class VehicleNegotiator(SAONegotiator):
         self.bulletin_board = None
         self.remove_list=[]
         self.arrival_time_list=[]
+        self.flag = 0
+        self.current_weight = 0
+        self.max_weight = 100
         super().__init__( preferences, ufun, name, parent, owner, id, type_name, can_propose)
         #self.add_capabilities(dict(propose_for_self=True))
 
@@ -54,6 +57,7 @@ class VehicleNegotiator(SAONegotiator):
                 task_a = self.initial_offer_received["taskA"]
                 task_b = None
                 self.make_remove_list(task_a)
+                self.flag = 1
             # 車両Bの場合、初回に受け取った提案からtaskAを取得
             task_a = self.initial_offer_received["taskA"] 
             #task_b = None  # 一方的に受け取る場合
@@ -80,13 +84,19 @@ class VehicleNegotiator(SAONegotiator):
                 cost=calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board)
                 if task_b == None:
                     return ResponseType.ACCEPT_OFFER
+                elif self.current_weight + task_b.weight > self.max_weight:
+                    return ResponseType.REJECT_OFFER
                 elif calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board) < 0:
                     return ResponseType.ACCEPT_OFFER
                 else:
                     return ResponseType.REJECT_OFFER
             else:
-                cost = calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board) 
-
+                cost = calculate_cost_saving(self.arrival_time_list,offer["taskA"],offer["taskB"],self.tasks,self.bulletin_board)
+                if task_b == None:
+                    return ResponseType.ACCEPT_OFFER 
+                if task_b != None:
+                    if self.current_weight + task_b.weight > self.max_weight:
+                        return ResponseType.REJECT_OFFER
                 if cost < cost_border:
                     return ResponseType.ACCEPT_OFFER
                 else:
