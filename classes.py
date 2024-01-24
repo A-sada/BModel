@@ -71,3 +71,8 @@ class pac_task:
         self.earliest_start_time = 0
         self.late_start_time = 0
         self.earliest_arrival_time=0
+
+class cont:
+    def __init__(self,agree :Agree,cost) -> None:
+        self.agre = agree
+        self.cost = cost

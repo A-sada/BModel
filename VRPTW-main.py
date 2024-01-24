@@ -1,6 +1,6 @@
 
 from initialsolution import assign_tasks_to_vehicles_with_insert,read_task
-from classes import Task,Offer,Nego,Agree,Balletin
+from classes import *
 import random
 from datetime import datetime
 from Negotiator import Nego1
@@ -63,7 +63,7 @@ zones = create_time_zones(max_time,n_zones)
 dep_x = tasks[0].x_coordinate
 dep_y = tasks[0].y_coordinate
 tasks.pop(0)
-#random.shuffle(tasks)
+random.shuffle(tasks)
 bulletin_board = Balletin(False,b_board,stay_areas_bb, max_xy,n,zones)
 # タスクを車両に割り当て（時間制約を含む）
 bulletin_board.dep_x = dep_x
@@ -84,13 +84,13 @@ i=0
 filename = os.path.join(directory_name, f"Step-0.txt") 
 with open(filename, 'w') as f:
     for vehicle in vehicles:
+        vehicle.bulletin_update(max_xy,max_time,zones,n)
         task_ids = [task.id for task in vehicle.tasks]
         # ファイル名を生成
         f.write(f"Vehicle {vehicle.id} has tasks {task_ids} with total weight {vehicle.current_weight}.\n")
         if len(task_ids) == 1:
             count += 1
-
-
+# plot_vehicle_routes(vehicles)
 #車両routeの適正比較
 from collections import deque
 N=100
@@ -141,7 +141,7 @@ for negotiate_steps in range(N):
                 # 車両Aにオファーの受け入れを通知
                 cars_A.accept_offer(offer,negotiation_id)
                 negotiation_id += 1
-    #print(f"交渉リストの長さ：{len(negotiation_list)}")
+    print(f"交渉リストの長さ：{len(negotiation_list)}")
     agreements=[]
     start = time.time()
     for neg in negotiation_list:
@@ -161,7 +161,7 @@ for negotiate_steps in range(N):
             taskB = agreement['taskB']if 'taskB' in agreement else None
             agreements.append(Agree(neg.vehicleA,neg.vehicleB,taskA,taskB))
         neg.vehicleA.end_negotiation()
-    #print(f"合意リストの長さ：{len(agreements)}")
+    print(f"合意リストの長さ：{len(agreements)}")
     end = time.time()
     time_diff = end - start
     #print(f"Nego1関数の実行時間: {time_diff} 秒")
@@ -187,11 +187,24 @@ for negotiate_steps in range(N):
     time_diff = end - start
     #print(f"sign_contracts関数の実行時間: {time_diff} 秒")
     for contract in agreements:
-        if contract in contracts_signed.get(contract.vehicleA, [10]) or \
-           contract in contracts_signed.get(contract.vehicleB, [10]):
-            signed.append(contract)
-    # print(f"署名リストの長さ：{len(signed)}")
-
+        if contract in contracts_signed.get(contract.vehicleA, [0]) or \
+           contract in contracts_signed.get(contract.vehicleB, [0]):
+            A_list= contracts_signed.get(contract.vehicleA, [0])
+            B_list= contracts_signed.get(contract.vehicleB, [0])
+            if contract in A_list:
+                A_cost = A_list.index(contract)/len(A_list)
+            else:
+                A_cost = 0
+            if contract in B_list:
+                B_cost = B_list.index(contract)/len(B_list)
+            else:
+                B_cost = 0
+            cost = A_cost + B_cost
+            signed.append(cont(contract,cost))
+    sorted_signed = sorted(signed, key=lambda x: x.cost)
+    signed = []
+    signed = [x.agre for x in sorted_signed]    
+    print(f"署名リストの長さ：{len(signed)}")
     start = time.time()
     for sig in signed:
         AgentA = sig.vehicleA
@@ -242,10 +255,10 @@ for negotiate_steps in range(N):
             # print(taskB)
             # print(AgentA.tasks)
             # print(AgentB.tasks)
-        # else:
-        #     # print('交換成功')
-            # print(taskA)
-            # print(taskB)
+        else:
+            # print('交換成功')
+            print(taskA)
+            print(taskB)
 
 
         #    print(f'車両{AgentA.id}のルート：{AgentA.tasks}')
@@ -264,8 +277,8 @@ for negotiate_steps in range(N):
         
         if len(car.tasks)== 0:
             no_runs.append(car)
-            #vehicles.remove(car)
-            vehicles.pop(zzz)
+            vehicles.remove(car)
+            #vehicles.pop(car)
             #del vehicles[zzz]
             #zzz += 1
             # id = 5 の行のインデックスを見つける
@@ -304,7 +317,7 @@ for negotiate_steps in range(N):
 
     for car in vehicles:
         car.step()
-
+    # plot_vehicle_routes(vehicles)
     filename = os.path.join(directory_name, f"step-{negotiate_steps+1}.txt")
     with open(filename, 'w') as f:
         for vehicle in vehicles:

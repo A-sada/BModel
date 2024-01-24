@@ -38,7 +38,7 @@ def create_time_zones(T, num_zones):
 
 # タスク間の移動で通過するエリアを計算する関数（修正版）
 # このバージョンでは、座標（数値）を返すようにします。
-def passing_areas_coordinates(task1, task2, X):
+def passing_areas_coordinates(task1, task2):
     distance = euclidean_distance(task1, task2)
     steps = int(distance)
     coordinates = []
@@ -48,6 +48,8 @@ def passing_areas_coordinates(task1, task2, X):
         ratio = i / steps
         x = task1.x_coordinate + ratio * (task2.x_coordinate - task1.x_coordinate)
         y = task1.y_coordinate + ratio * (task2.y_coordinate - task1.y_coordinate)
+        x = int(x)
+        y = int(y)
         coordinates.append((x, y))
     return coordinates
 
@@ -58,6 +60,7 @@ def calculate_dynamic_area(x, y, X, n):
     col = int(x // cell_size) + 1
     return f"{row}{col}"
 #アルファベットが，y座標
+#数字が，x座標
 
 # 時間帯ごとに最も長く滞在するエリアを動的に計算する関数（修正版）
 def most_stayed_area_dynamic(tasks, X, T, zones, n, dep_x, dep_y):
@@ -65,36 +68,88 @@ def most_stayed_area_dynamic(tasks, X, T, zones, n, dep_x, dep_y):
     time_zones = zones
     df_row = {}
     yet_dep = tasks[1].ready_time - euclidean_distance(tasks[0],tasks[1])
-    back_dep = tasks[-2].ready_time + euclidean_distance(tasks[0],tasks[-2])
+    # for zone, (start_time, end_time) in time_zones.items():
+    #     area_counter = Counter()
+    #     for i in range(len(tasks) - 1):
+    #         task1 = tasks[i]
+    #         task2 = tasks[i + 1]
+    #         if task1.due_date >= start_time and task2.ready_time <= end_time:
+    #             # タスク間移動のエリアをカウント
+    #             coordinates = passing_areas_coordinates(task1, task2, X)
+    #             areas = [calculate_dynamic_area(x, y, X, n) for x, y in coordinates]
+    #             area_counter.update(areas)
+                
+    #             # タスク1のサービス時間をカウント
+    #             service_area = calculate_dynamic_area(task1.x_coordinate, task1.y_coordinate, X, n)
+    #             area_counter[service_area] += task1.service_time
+                
+    #             # タスク2までの待ち時間をカウント
+    #             wait_time = max(task2.ready_time - task1.due_date, 0)
+    #             wait_area = calculate_dynamic_area(task1.x_coordinate, task1.y_coordinate, X, n)
+    #             area_counter[wait_area] += wait_time
+        
+    #     most_common_area, _ = area_counter.most_common(1)[0] if area_counter else (None, None)
+    #     if end_time <= yet_dep:
+    #         most_common_area = None
+    #         #most_common_area, _ = (None, None)
+    #     if start_time >= back_dep:
+    #         #most_common_area, _ = (None, None)
+    #         most_common_area = None
+    #     df_row[zone] = most_common_area
+    # return df_row
+    current_time = 0
+    cordinates =[]
+    for i in range(len(tasks) - 1):
+        task1 = tasks[i]
+        task2 = tasks[i + 1]
+        current_time = current_time + euclidean_distance(task1,task2)
+        cordinates.extend(passing_areas_coordinates(task1,task2))
+        if current_time<= task2.ready_time:
+            for i in range(task2.ready_time-current_time):
+                cordinates.append((task2.x_coordinate,task2.y_coordinate))
+            # cordinates+=[(task2.x_coordinate,task2.y_coordinate)]*(task2.ready_time-current_time)
+            current_time = task2.ready_time
+        for i in range(task2.service_time):
+            cordinates.append((task2.x_coordinate,task2.y_coordinate))
+        # cordinates+=[(task2.x_coordinate,task2.y_coordinate)]*task2.service_time
+        current_time += task2.service_time
+        back_dep = current_time 
+    # print(cordinates)
     for zone, (start_time, end_time) in time_zones.items():
         area_counter = Counter()
-        for i in range(len(tasks) - 1):
-            task1 = tasks[i]
-            task2 = tasks[i + 1]
-            if task1.due_date >= start_time and task2.ready_time <= end_time:
-                # タスク間移動のエリアをカウント
-                coordinates = passing_areas_coordinates(task1, task2, X)
-                areas = [calculate_dynamic_area(x, y, X, n) for x, y in coordinates]
-                area_counter.update(areas)
-                
-                # タスク1のサービス時間をカウント
-                service_area = calculate_dynamic_area(task1.x_coordinate, task1.y_coordinate, X, n)
-                area_counter[service_area] += task1.service_time
-                
-                # タスク2までの待ち時間をカウント
-                wait_time = max(task2.ready_time - task1.due_date, 0)
-                wait_area = calculate_dynamic_area(task1.x_coordinate, task1.y_coordinate, X, n)
-                area_counter[wait_area] += wait_time
-        
-        most_common_area, _ = area_counter.most_common(1)[0] if area_counter else (None, None)
-        if end_time <= yet_dep:
-            most_common_area = None
-            #most_common_area, _ = (None, None)
-        if start_time >= back_dep:
-            #most_common_area, _ = (None, None)
-            most_common_area = None
-        df_row[zone] = most_common_area
+        if end_time < yet_dep:
+            df_row[zone] = None
+        elif start_time > back_dep:
+            df_row[zone] = None
+        elif start_time <= yet_dep and end_time >= yet_dep and start_time <= back_dep and end_time >= back_dep:
+            #車両が出発．帰還する時間帯:
+            areas = [calculate_dynamic_area(x, y, X, n) for x, y in cordinates]
+            area_counter.update(areas)
+            most_common_area, _ = area_counter.most_common(1)[0] if area_counter else (None, None)
+            df_row[zone] = most_common_area
+        elif start_time < yet_dep and yet_dep <= end_time:#車両が出発する時間帯
+            if yet_dep == end_time:
+                x,y = cordinates[0]
+                areas =calculate_dynamic_area(x, y, X, n)
+            else:
+                areas = [calculate_dynamic_area(x, y, X, n) for x, y in cordinates[0 : end_time-yet_dep+1]]
+            area_counter.update(areas)
+            most_common_area, _ = area_counter.most_common(1)[0] if area_counter else (None, None)
+            df_row[zone] = most_common_area
+        elif start_time <= back_dep and end_time > back_dep:#車両が帰ってくる時間帯
+
+            areas = [calculate_dynamic_area(x, y, X, n) for x, y in cordinates[start_time - yet_dep  :]]
+            area_counter.update(areas)
+            most_common_area, _ = area_counter.most_common(1)[0] if area_counter else (None, None)
+            df_row[zone] = most_common_area
+        else:
+
+            areas = [calculate_dynamic_area(x, y, X, n) for x, y in cordinates[start_time-yet_dep : end_time-yet_dep+1]]
+            area_counter.update(areas)
+            most_common_area, _ = area_counter.most_common(1)[0] if area_counter else (None, None)
+            df_row[zone] = most_common_area
     return df_row
+
 
 
 # DataFrameを逐次更新する関数を追加
@@ -102,6 +157,8 @@ def update_stay_areas(df, car_id, new_data):
     for zone, area in new_data.items():
         df = df.loc[df['id'] == car_id]
         df.loc[:, zone] = area
+    return df
+
 
 """
 # サンプルデータでテスト

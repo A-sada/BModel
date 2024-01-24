@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from balletin_are_search import calculate_dynamic_area
 from VRPTW_functions import find_time_zone,find_vehicles_in_neighboring_areas,find_vehicle_by_id, earliest_start_time_list, latest_start_time_list, euclidean_distance
-from classes import Offer,Agree,pac_task,Task
+from classes import *
 import copy
+
  
 
 class Vehicle(Vehicle_BASE):
@@ -107,12 +108,19 @@ class Vehicle(Vehicle_BASE):
             task_area = calculate_dynamic_area(task.x_coordinate,task.y_coordinate,self.bulletin_board.X, self.bulletin_board.n)
             task_time_zone = find_time_zone(task.ready_time,self.bulletin_board.zones)
             vehicles_in_neighbors = find_vehicles_in_neighboring_areas(task_time_zone, task_area, self.bulletin_board.area_board) #車両IDが帰ってくる
+            for i in range(len(vehicles_in_neighbors)):
+                car_id = vehicles_in_neighbors.pop(0)
+                for car in vehicles:
+                    if car.id == car_id:
+                        vehicles_in_neighbors.append(car)
+                        break
             vehicles_in_neighbors.extend(self.find_available_vehicles(self.bulletin_board.time_board, task.ready_time,task.due_date,vehicles))
-            if self.id in vehicles_in_neighbors:
-                vehicles_in_neighbors.remove(self.id)
+            vehicles_in_neighbors = list(set(vehicles_in_neighbors))
+            if self in vehicles_in_neighbors:
+                vehicles_in_neighbors.remove(self)
 
             for vehicle in vehicles_in_neighbors:
-                car = find_vehicle_by_id(vehicle, run_cars)
+                car = vehicle
                 if car != None:
                     ofe=Offer(offer_id,self.id,car.id,task)
                     offer_id += 1
@@ -168,31 +176,35 @@ class Vehicle(Vehicle_BASE):
                 #閾値は変数
                 cost_border = 0
                 if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-                    cost_border = 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
+                    cost_border = 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
                 else:
-                    cost_border = 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +10
+                    cost_border = -10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps 
                 #print(f"車両{self.id}のコスト閾値は{cost_border}")
                 #print(min_cost[task][0])
                 if min_cost[task][0] < cost_border:
                     if min_cost_agreement[task][0] not in signed:
-                        signed.append(min_cost_agreement[task][0])
-                if len(min_cost[task])>2:
+                        signed.append(cont(min_cost_agreement[task][0],min_cost[task][0]))
+                if len(min_cost[task])>1:
                     if min_cost[task][1] < cost_border:
                         if min_cost_agreement[task][1] not in signed:
-                            signed.append(min_cost_agreement[task][1])
-                    if len(min_cost[task])>4:
+                            signed.append(cont(min_cost_agreement[task][1],min_cost[task][1]) )
+                    if len(min_cost[task])>2:
                         if min_cost[task][2] < cost_border:
                             if min_cost_agreement[task][2] not in signed:
-                                signed.append(min_cost_agreement[task][2]) 
-                    if len(min_cost[task])>6:
+                                signed.append(cont(min_cost_agreement[task][2],min_cost[task][2]))
+                    if len(min_cost[task])>3:
                         if min_cost[task][3] < cost_border:
                             if min_cost_agreement[task][3] not in signed:
 
-                                signed.append(min_cost_agreement[task][3])
-                    if len(min_cost[task])>8:
+                                signed.append(cont(min_cost_agreement[task][3],min_cost[task][3]))
+                    if len(min_cost[task])>4:
                         if min_cost[task][4] < cost_border:
                             if min_cost_agreement[task][4] not in signed:
-                                signed.append(min_cost_agreement[task][4])
+                                signed.append(cont(min_cost_agreement[task][4],min_cost[task][4]))
+        sorted_cost = sorted(signed, key=lambda x:x.cost)
+        signed = []
+        for i in sorted_cost:
+            signed.append(i.agre)
         #print(f"車両ごとの署名リストの長さ：{len(signed)}")
         # print(signed)
         return signed
@@ -298,57 +310,48 @@ class Vehicle(Vehicle_BASE):
         return distance
         #距離が短くなれば負の値を返す
 
+    def route_check(self,route ,dep_x,dep_y):
+        depot_task = Task(0, dep_x, dep_y, 0, 0, 0, 0)  # 仮の開始位置
+        current_time = 0
+        for i in range(len(route)):
+            current_task = route[i]
+            if i == 0:
+                current_time = max(euclidean_distance(depot_task, current_task),current_task.ready_time)
+                if current_time > current_task.due_date:
+                    return False
+                current_time += current_task.service_time
+                # 現在のタスクの終了時間を計算
+            else:
+                current_time = max(current_time + euclidean_distance(pre_task,current_task),current_task.ready_time)
+                if current_time > current_task.due_date:
+                    return False
+                #current_timeをカレントタスクの開始時間に更新
+                current_time += current_task.service_time
+            pre_task = current_task
+        return True
     
     def least_cost_time_insertion_index(self , new_task):
-        if not isinstance(new_task, Task):  # 仮定として Task というクラスが存在するとします。
-            ##print("エラー: 'new_task' が Task オブジェクトではありません。")
-            return False
-        min_cost = float('inf')
+        def calculate_total_distance(tasks):
+            # ここに移動距離の計算ロジックを実装
+            total_distance = 0
+            for i in range(len(tasks) - 1):
+                total_distance += euclidean_distance(tasks[i], tasks[i + 1])
+            return total_distance
+
         best_position = None
-        cost = 0
-        if len(self.tasks) == 0:
-            return False
-        # 車両の開始位置から新しいタスクまでの距離を計算
-        start_task = Task(0, self.dep_x, self.dep_y, 0, 0, 0, 0)  # 仮の開始位置
-        travel_time_from_start = euclidean_distance(start_task, new_task)
-        if travel_time_from_start <= new_task.due_date :
-            if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, self.tasks[0]) <= self.tasks[0].due_date: 
-                cost = self.calculate_slack_time(self.tasks, 0, new_task)
-                if min_cost > cost:
-                    min_cost = cost
-                    best_position = 0
+        min_distance = 100000000000
+        route = copy.deepcopy(self.tasks)
+        route.insert(0,Task(0,0,self.dep_x,self.dep_y,0,0,0))
+        route.append(Task(0,0,self.dep_x,self.dep_y,0,0,0))
+        for i in range(len(route) + 1):
+            new_tasks = route[:i] + [new_task] + route[i:]
+            current_distance = calculate_total_distance(new_tasks)
+            if current_distance < min_distance:
+                if self.route_check(new_tasks,self.dep_x,self.dep_y) == True:
+                    min_distance = current_distance
+                    best_position = i
 
-
-        # 各タスク間での新しいタスクの挿入を試みる
-        for i in range(len(self.tasks) - 1):
-            current_task = self.tasks[i]
-            next_task = self.tasks[i + 1]
-
-            # 現在のタスクの終了時間を計算
-            current_task_end_time = current_task.ready_time + current_task.service_time
-
-            # 新しいタスクへの移動に必要な時間を計算
-            travel_time_to_new_task = euclidean_distance(current_task, new_task)
-
-            # 新しいタスクのサービス終了時間を計算
-            new_task_end_time = current_task_end_time + travel_time_to_new_task + new_task.service_time
-
-            # 次のタスクへの移動に必要な時間を計算
-            travel_time_to_next_task = euclidean_distance(new_task, next_task)
-
-            # 次のタスクの開始時間を計算
-            next_task_start_time = new_task_end_time + travel_time_to_next_task
-
-            # 新しいタスクがdue_date前に終了し、次のタスクが時間内に開始できるかどうかを確認
-            if current_task_end_time + travel_time_to_new_task <= new_task.due_date and next_task_start_time <= next_task.due_date:
-                cost = self.calculate_slack_time(self.tasks,i+1,new_task)
-                if min_cost > cost:
-                    min_cost = cost
-                    best_position = i+1
-
-        if best_position != None:
-            return best_position
-        return None
+        return best_position
     
     def step(self):
         return super().step()
@@ -399,9 +402,12 @@ class Vehicle(Vehicle_BASE):
     
         #コストが最小となる場所に挿入する
     def add(self, new_task):
+        if len (self.tasks) == 0:
+            self.tasks.append(new_task)
+            self.current_weight += new_task.weight
+            self.arrival_time_list.append(pac_task(new_task))
+            return True
         index = None
-        if new_task in self.tasks:
-            return False
         route = self.tasks
         index = self.least_cost_time_insertion_index(new_task)
         if index  == None :

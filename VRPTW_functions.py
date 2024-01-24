@@ -33,7 +33,7 @@ def slack_time_list( route,slist):
 
 def find_time_zone(t, zones):
     for zone_name, (start, end) in zones.items():
-        if start <= t < end:
+        if start <= t <= end:
             return zone_name
     return False  # t がどの時間帯にも属さない場合
 
@@ -57,15 +57,12 @@ def find_neighboring_areas(area):
     return neighboring_areas
 
 def find_vehicles_in_neighboring_areas(time_zone, area, df):
-    neighbors = find_neighboring_areas(area)
+    neighbor_areas = find_neighboring_areas(area)
     vehicles = []
-    if time_zone in df.columns:
-        for neighbor in neighbors:
-            # neighborがtime列に存在するかチェック
-            if neighbor in df[time_zone].values:
-                matching_vehicles = df[df[time_zone] == neighbor]['id'].tolist()
-                vehicles.extend(matching_vehicles)
-
+    for neighbor_area in neighbor_areas:
+        # DataFrameの該当する時間帯の列で隣接エリアを検索し、該当する車両IDをリストに追加
+        vehicles_in_area = df[df[time_zone] == neighbor_area]['id'].tolist()
+        vehicles.extend(vehicles_in_area)
     return vehicles
 
 def find_vehicle_by_id(vehicle_id, vehicles):
@@ -348,3 +345,23 @@ def sum_travel_time(car_list):
     for car in car_list:
         time += cal_travel_time(car.tasks,car.dep_x,car.dep_y)
     return time
+import matplotlib.pyplot as plt
+def plot_vehicle_routes(vehicles):
+    colors = ['red', 'blue', 'green', 'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan']
+    markers = ['o', '^', 's', 'p', '*', 'x', '+', 'D', 'h', 'v']
+
+    for i, vehicle in enumerate(vehicles):
+        # 各車両のタスクから座標を抽出
+        x_coords = [task.x_coordinate for task in vehicle.tasks]
+        y_coords = [task.y_coordinate for task in vehicle.tasks]
+
+        # ルートをプロット
+        plt.plot(x_coords, y_coords, marker=markers[i % len(markers)], color=colors[i % len(colors)], label=f'Vehicle {vehicle.id}')
+        for task in vehicle.tasks:
+            plt.text(task.x_coordinate, task.y_coordinate, str(task.id))  # タスクIDを表示
+
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.title('Vehicle Routing')
+    plt.legend()
+    plt.show()
