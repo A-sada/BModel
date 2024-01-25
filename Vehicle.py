@@ -175,13 +175,19 @@ class Vehicle_BASE:
     def pop(self,task):
         if task in self.tasks:
             self.tasks.remove(task)
+            return True
         else:
             return False
         if task in self.tasks:
             return False
         else:
             return True
-    
+    def pop_index(self,index):
+        if index < len(self.tasks):
+            self.tasks.pop(index)
+            return True
+        else:
+            return False
     #とにかく挿入可能な場所に挿入する
     def add_old(self,new_task):
         # 車両の開始位置から新しいタスクまでの距離を計算

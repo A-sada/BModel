@@ -1,7 +1,6 @@
 import math
 from classes import Task,pac_task,Agree,pac_task
 
-
 # タスク間または車両とタスク間のユークリッド距離を計算する関数
 def euclidean_distance(task1, task2):
     return (int)(math.sqrt((task1.x_coordinate - task2.x_coordinate)**2 + (task1.y_coordinate - task2.y_coordinate)**2))
@@ -337,7 +336,7 @@ def cal_travel_time(route,dep_x,dep_y):
             time += euclidean_distance(Task(0,dep_x,dep_y,0,0,0,0),route[i])
         else:
             time += euclidean_distance(route[i-1],route[i])
-    time += euclidean_distance(route[-1],Task(0,dep_x,dep_y,0,0,0,0))
+    time += euclidean_distance(route[len(route)-1],Task(0,dep_x,dep_y,0,0,0,0))
     return time
 
 def sum_travel_time(car_list):
@@ -346,10 +345,12 @@ def sum_travel_time(car_list):
         time += cal_travel_time(car.tasks,car.dep_x,car.dep_y)
     return time
 import matplotlib.pyplot as plt
-def plot_vehicle_routes(vehicles):
+
+import os
+def plot_vehicle_routes(vehicles,directory_name,negotiate_steps):
     colors = ['red', 'blue', 'green', 'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan']
     markers = ['o', '^', 's', 'p', '*', 'x', '+', 'D', 'h', 'v']
-
+    plt.figure()
     for i, vehicle in enumerate(vehicles):
         # 各車両のタスクから座標を抽出
         x_coords = [task.x_coordinate for task in vehicle.tasks]
@@ -364,4 +365,5 @@ def plot_vehicle_routes(vehicles):
     plt.ylabel('Y Coordinate')
     plt.title('Vehicle Routing')
     plt.legend()
-    plt.show()
+    save_path = os.path.join(directory_name, f'route_{negotiate_steps}.png')
+    plt.savefig(save_path)

@@ -15,6 +15,8 @@ run_num = 0
 tasks = []  # タスクを保存するためのリスト
 vehicles = []
 no_runs=[]
+N=10
+
 #時間に関する掲示板
 b_board = pd.DataFrame({
     'id': pd.Series(dtype='int'),
@@ -93,7 +95,12 @@ with open(filename, 'w') as f:
 # plot_vehicle_routes(vehicles)
 #車両routeの適正比較
 from collections import deque
-N=100
+log_CVN=[]
+log_CRT=[]
+log_CVN.append(len(vehicles))
+log_CRT.append(sum_travel_time(vehicles))
+log_nego=[0]
+
 bulletin_board.max_steps = N
 for negotiate_steps in range(N):
     start = time.time()
@@ -187,7 +194,7 @@ for negotiate_steps in range(N):
     time_diff = end - start
     #print(f"sign_contracts関数の実行時間: {time_diff} 秒")
     for contract in agreements:
-        if contract in contracts_signed.get(contract.vehicleA, [0]) or \
+        if contract in contracts_signed.get(contract.vehicleA, [0]) and \
            contract in contracts_signed.get(contract.vehicleB, [0]):
             A_list= contracts_signed.get(contract.vehicleA, [0])
             B_list= contracts_signed.get(contract.vehicleB, [0])
@@ -204,6 +211,7 @@ for negotiate_steps in range(N):
     sorted_signed = sorted(signed, key=lambda x: x.cost)
     signed = []
     signed = [x.agre for x in sorted_signed]    
+    count = 0
     #print(f"署名リストの長さ：{len(signed)}")
     start = time.time()
     for sig in signed:
@@ -215,25 +223,25 @@ for negotiate_steps in range(N):
         routeB =[]
         for task in AgentA.tasks:
             routeA.append(task)
-            
         for task in AgentB.tasks:
             routeB.append(task)
         A_weiht = AgentA.current_weight
         B_weiht = AgentB.current_weight
+
         exchange_successful = False
         if taskB is None:
             if AgentA.pop(taskA) :
                 if AgentB.add(taskA) :
                     exchange_successful = True
         # 交換が成功したかどうかを追跡するためのフラグ
-        # elif AgentA.pop(taskA) and AgentB.pop(taskB) :
-        #     if AgentB.add(taskB)  and AgentB.add(taskA) :
-        #         exchange_successful = True
-        if AgentA.pop(taskA):
-            if AgentB.pop(taskB):
-                if AgentB.add(taskA):
-                    if AgentA.add(taskB):
-                        exchange_successful = True
+        elif AgentA.pop(taskA) and AgentB.pop(taskB) :
+            if AgentA.add(taskB)  and AgentB.add(taskA) :
+                exchange_successful = True
+        # elif AgentA.pop(taskA):
+        #     if AgentB.pop(taskB):
+        #         if AgentB.add(taskA):
+        #             if AgentA.add(taskB):
+        #                 exchange_successful = True
         #             else:
         #                 print("AgentA.add(taskB)失敗")
                 
@@ -246,19 +254,22 @@ for negotiate_steps in range(N):
 
         # 交換が成功しなかった場合、元に戻す
         if not exchange_successful:
+            AgentA.tasks = []
+            AgentB.tasks = []
             AgentA.tasks = routeA
             AgentB.tasks = routeB
             AgentA.current_weight = A_weiht
             AgentB.current_weight = B_weiht
             # print('交換失敗')
-            # print(taskA)
-            # print(taskB)
+            # print(taskA.id)
+            # print(taskB.id)
             # print(AgentA.tasks)
             # print(AgentB.tasks)
-        # else:
-            # print('交換成功')
-            # print(taskA)
-            # print(taskB)
+        else:
+            count += 1
+            print('交換成功')
+            print(taskA.id)
+            print(taskB.id)
 
 
         #    print(f'車両{AgentA.id}のルート：{AgentA.tasks}')
@@ -317,7 +328,6 @@ for negotiate_steps in range(N):
 
     for car in vehicles:
         car.step()
-    # plot_vehicle_routes(vehicles)
     filename = os.path.join(directory_name, f"step-{negotiate_steps+1}.txt")
     with open(filename, 'w') as f:
         for vehicle in vehicles:
@@ -331,5 +341,12 @@ for negotiate_steps in range(N):
     bulletin_board.time_board.to_csv(filename,sep='\t',index = False)
     filename = os.path.join(directory_name, f"AreaBoard-{negotiate_steps}.txt")
     bulletin_board.area_board.to_csv(filename,sep='\t',index = False)
-    print(sum_travel_time(vehicles))
-
+    plot_vehicle_routes(vehicles,directory_name,negotiate_steps)
+    log_CVN.append(len(vehicles))
+    log_CRT.append(sum_travel_time(vehicles))
+    log_nego.append(count)
+filename = os.path.join(directory_name, "log_main.txt")
+with open(filename, 'w') as f:
+    for i in range(len(log_nego)):
+        # ファイル名を生成
+        f.write(f"steps {i} CVN {log_CVN[i]} CRT {log_CRT[i]} n_neg {log_nego[i]}.\n")

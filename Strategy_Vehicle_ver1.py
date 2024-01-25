@@ -128,6 +128,8 @@ class Vehicle(Vehicle_BASE):
         #list_return = copy.deepcopy(self.offer_nego_list)
         return self.offer_nego_list
 
+
+
     def find_available_vehicles(self,b_board, task_ready_time, task_due_date,vehicles):
         #タスク時間が，車両の稼動時間前後の車両を探す
         available_vehicles = []
@@ -151,10 +153,10 @@ class Vehicle(Vehicle_BASE):
             if task == None:
                 task = agreements.taskB if agreements.taskB in self.tasks else None
             if task != None:
-                if task not in min_cost:
-                    min_cost[task] = [100000]
-                    min_cost_agreement[task] = []
-
+                # if task not in min_cost:
+                    # min_cost[task] = []
+                    # min_cost_agreement[task] = []
+                cost = None
             #各タスクについて，もっともコストの低い合意結果とコストを対応させて記録する
                 cost = self.calculate_cost_saving(agreements)
                 if cost != None:
@@ -163,12 +165,17 @@ class Vehicle(Vehicle_BASE):
                     #         signed.append(agreements)
                     #min_costにtaskがない場合，min_costに追加
                     if task not in min_cost:
-                        min_cost[task].insert(0,cost)
-                        min_cost_agreement[task].insert(0,agreements)  
+                        min_cost[task] = [cost]
+                        min_cost_agreement[task] = [agreements]
+                        # min_cost[task].insert(0,cost)
+                        # min_cost_agreement[task].insert(0,agreements)  
                     #min_costにtaskがある場合，コストが小さい方をmin_costに追加
                     elif min_cost[task][0] > cost:
                         min_cost[task].insert(0,cost)
                         min_cost_agreement[task].insert(0,agreements)
+                    else:
+                        min_cost[task].append(cost)
+                        min_cost_agreement[task].append(agreements)
             #計算したコストが閾値以下であれば合意する
         for task in min_cost:
             if self.current_weight + task.weight < self.max_weight + 0 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
@@ -176,32 +183,37 @@ class Vehicle(Vehicle_BASE):
                 #閾値は変数
                 cost_border = 0
                 if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-                    cost_border = -10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
+                    cost_border = 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
                 else:
-                    cost_border = -10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps 
+                    cost_border = 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps 
                 #print(f"車両{self.id}のコスト閾値は{cost_border}")
                 #print(min_cost[task][0])
-                if min_cost[task][0] < cost_border:
-                    if min_cost_agreement[task][0] not in signed:
-                        signed.append(cont(min_cost_agreement[task][0],min_cost[task][0]))
-                if len(min_cost[task])>1:
-                    if min_cost[task][1] < cost_border:
-                        if min_cost_agreement[task][1] not in signed:
-                            signed.append(cont(min_cost_agreement[task][1],min_cost[task][1]) )
-                    if len(min_cost[task])>2:
-                        if min_cost[task][2] < cost_border:
-                            if min_cost_agreement[task][2] not in signed:
-                                signed.append(cont(min_cost_agreement[task][2],min_cost[task][2]))
-                    if len(min_cost[task])>3:
-                        if min_cost[task][3] < cost_border:
-                            if min_cost_agreement[task][3] not in signed:
+                # if min_cost[task][0] < cost_border:
+                #     if min_cost_agreement[task][0] not in signed:
+                #         signed.append(cont(min_cost_agreement[task][0],min_cost[task][0]))
+                # if len(min_cost[task])>1:
+                #     if min_cost[task][1] < cost_border:
+                #         if min_cost_agreement[task][1] not in signed:
+                #             signed.append(cont(min_cost_agreement[task][1],min_cost[task][1]) )
+                #     if len(min_cost[task])>=3:
+                #         if min_cost[task][2] < cost_border:
+                #             if min_cost_agreement[task][2] not in signed:
+                #                 signed.append(cont(min_cost_agreement[task][2],min_cost[task][2]))
+                #         if len(min_cost[task])>=4:
+                #             if min_cost[task][3] < cost_border:
+                #                 if min_cost_agreement[task][3] not in signed:
+                #                     signed.append(cont(min_cost_agreement[task][3],min_cost[task][3]))
+                #             if len(min_cost[task])>=5:
+                #                 if min_cost[task][4] < cost_border:
+                #                     if min_cost_agreement[task][4] not in signed:
+                #                         signed.append(cont(min_cost_agreement[task][4],min_cost[task][4]))
+                for i in range(len(min_cost[task])):
+                    if min_cost[task][i] < cost_border:
+                        if min_cost_agreement[task][i] not in signed:
+                            signed.append(cont(min_cost_agreement[task][i],min_cost[task][i]))
 
-                                signed.append(cont(min_cost_agreement[task][3],min_cost[task][3]))
-                    if len(min_cost[task])>4:
-                        if min_cost[task][4] < cost_border:
-                            if min_cost_agreement[task][4] not in signed:
-                                signed.append(cont(min_cost_agreement[task][4],min_cost[task][4]))
         sorted_cost = sorted(signed, key=lambda x:x.cost)
+
         signed = []
         for i in sorted_cost:
             signed.append(i.agre)
@@ -331,28 +343,73 @@ class Vehicle(Vehicle_BASE):
         return True
     
     def least_cost_time_insertion_index(self , new_task):
-        def calculate_total_distance(tasks):
-            # ここに移動距離の計算ロジックを実装
-            total_distance = 0
-            for i in range(len(tasks) - 1):
-                total_distance += euclidean_distance(tasks[i], tasks[i + 1])
-            return total_distance
+        # def calculate_total_distance(tasks):
+        #     # ここに移動距離の計算ロジックを実装
+        #     total_distance = 0
+        #     for i in range(len(tasks) - 1):
+        #         total_distance += euclidean_distance(tasks[i], tasks[i + 1])
+        #     return total_distance
 
-        best_position = None
-        min_distance = 100000000000
-        route = copy.deepcopy(self.tasks)
-        check_route = copy.deepcopy(route)
-        for i in range(len(route) + 1):
-            new_tasks = route[:i] + [new_task] + route[i:]
-            current_distance = calculate_total_distance(new_tasks)
-            check_route = copy.deepcopy(route)
-            check_route.insert(i,new_task)
-            if current_distance < min_distance:
-                if self.route_check(check_route,self.dep_x,self.dep_y) != True:
-                    min_distance = current_distance
-                    best_position = i
+        # best_position = None
+        # min_distance = 100000000000
+        # route = copy.deepcopy(self.tasks)
+        # check_route = copy.deepcopy(route)
+        # for i in range(len(route) + 1):
+        #     new_tasks = route[:i] + [new_task] + route[i:]
+        #     current_distance = calculate_total_distance(new_tasks)
+        #     check_route = copy.deepcopy(route)
+        #     check_route.insert(i,new_task)
+        #     if current_distance < min_distance:
+        #         if self.route_check(check_route,self.dep_x,self.dep_y) != True:
+        #             min_distance = current_distance
+        #             best_position = i
 
-        return best_position
+        # return best_position
+        def calculate_additional_distance(tasks, new_task, insertion_index):
+            if not tasks:
+                return 0
+
+            # 挿入位置がリストの先頭の場合
+            if insertion_index == 0:
+                return euclidean_distance(new_task, tasks[0])
+
+            # 挿入位置がリストの末尾の場合
+            elif insertion_index == len(tasks):
+                return euclidean_distance(tasks[-1], new_task)
+
+            # 挿入位置がリストの中間の場合
+            else:
+                distance_before_insertion = euclidean_distance(tasks[insertion_index - 1], tasks[insertion_index])
+                distance_after_insertion = euclidean_distance(tasks[insertion_index - 1], new_task) + \
+                                        euclidean_distance(new_task, tasks[insertion_index])
+                return distance_after_insertion - distance_before_insertion
+        
+        def is_within_time_window(new_task, prev_task, next_task):
+            if prev_task is None:
+                return new_task.ready_time + new_task.service_time <= next_task.task.due_date - euclidean_distance(new_task, next_task.task)
+            elif next_task is None:
+                return prev_task.earliest_start_time + prev_task.task.service_time <= new_task.due_date - euclidean_distance(prev_task.task,new_task)
+            else:
+                return prev_task.earliest_start_time + prev_task.task.service_time <= new_task.due_date - euclidean_distance(prev_task.task,new_task) \
+                    and new_task.ready_time + new_task.service_time <= next_task.task.due_date - euclidean_distance(new_task, next_task.task)
+            
+
+        min_additional_distance = float('inf')
+        optimal_position = None
+
+        for insertion_index in range(len(self.tasks) + 1):
+            prev_task = self.arrival_time_list[insertion_index - 1] if insertion_index > 0 else None
+            next_task = self.arrival_time_list[insertion_index] if insertion_index < len(self.tasks) else None
+
+        # 時間窓制約を満たしているかを確認します
+            if is_within_time_window(new_task, prev_task, next_task):
+                additional_distance = calculate_additional_distance(self.tasks, new_task, insertion_index)
+                if additional_distance < min_additional_distance:
+                    min_additional_distance = additional_distance
+                    optimal_position = insertion_index
+    
+        return optimal_position
+
     
     def step(self):
         return super().step()
@@ -403,6 +460,8 @@ class Vehicle(Vehicle_BASE):
     
         #コストが最小となる場所に挿入する
     def add(self, new_task):
+        if new_task in self.tasks:
+            return False
         if len (self.tasks) == 0:
             self.tasks.append(new_task)
             self.current_weight += new_task.weight
@@ -412,16 +471,23 @@ class Vehicle(Vehicle_BASE):
         route = self.tasks
         index = self.least_cost_time_insertion_index(new_task)
         if index  == None :
-            for i in range(len(route)):
+            for i in range(len(route)+1):
+                if i == 0:
+                    route[i].due_date - euclidean_distance(route[i],new_task) > new_task.ready_time + new_task.service_time
+                    index = i
+                    break
                 if route[i].due_date > new_task.due_date:
                     index = i
                     break
+                if index == len(route):
+                    if route[-1].ready_time < new_task.due_date:
+                        index = len(route)
         if index == len(route):
             if self.current_weight + new_task.weight < self.max_weight + 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
                 self.current_weight += new_task.weight
                 route.append(new_task)
                 self.arrival_time_list.append(pac_task(new_task))
-        if index != None and self.current_weight + new_task.weight < \
+        elif index != None and self.current_weight + new_task.weight < \
                     self.max_weight + 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
             self.current_weight += new_task.weight
             self.tasks.insert(index,new_task)
@@ -429,11 +495,11 @@ class Vehicle(Vehicle_BASE):
         if new_task in self.tasks:
             return True
         else:
-            print(index)
-            print(self.tasks)
-            print(self.current_weight)
-            print(self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps)
-            print(new_task.weight)
+            # print(index)
+            # print(self.tasks)
+            # print(self.current_weight)
+            # print(self.max_weight + 100 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps)
+            # print(new_task.weight)
             return False
     
     def remove(self, task):
