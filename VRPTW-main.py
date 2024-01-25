@@ -90,8 +90,9 @@ with open(filename, 'w') as f:
         task_ids = [task.id for task in vehicle.tasks]
         # ファイル名を生成
         f.write(f"Vehicle {vehicle.id} has tasks {task_ids} with total weight {vehicle.current_weight}.\n")
-        if len(task_ids) == 1:
-            count += 1
+    f.write(f"CVN {len(vehicles)} CRT {sum_travel_time(vehicles)}\n")
+        # if len(task_ids) == 1:
+        #     count += 1
 # plot_vehicle_routes(vehicles)
 #車両routeの適正比較
 from collections import deque
@@ -148,7 +149,7 @@ for negotiate_steps in range(N):
                 # 車両Aにオファーの受け入れを通知
                 cars_A.accept_offer(offer,negotiation_id)
                 negotiation_id += 1
-    print(f"交渉リストの長さ：{len(negotiation_list)}")
+    # print(f"交渉リストの長さ：{len(negotiation_list)}")
     agreements=[]
     start = time.time()
     for neg in negotiation_list:
@@ -168,7 +169,7 @@ for negotiate_steps in range(N):
             taskB = agreement['taskB']if 'taskB' in agreement else None
             agreements.append(Agree(neg.vehicleA,neg.vehicleB,taskA,taskB))
         neg.vehicleA.end_negotiation()
-    print(f"合意リストの長さ：{len(agreements)}")
+    # print(f"合意リストの長さ：{len(agreements)}")
     end = time.time()
     time_diff = end - start
     #print(f"Nego1関数の実行時間: {time_diff} 秒")
@@ -237,22 +238,7 @@ for negotiate_steps in range(N):
         elif AgentA.pop(taskA) and AgentB.pop(taskB) :
             if AgentA.add(taskB)  and AgentB.add(taskA) :
                 exchange_successful = True
-        # elif AgentA.pop(taskA):
-        #     if AgentB.pop(taskB):
-        #         if AgentB.add(taskA):
-        #             if AgentA.add(taskB):
-        #                 exchange_successful = True
-        #             else:
-        #                 print("AgentA.add(taskB)失敗")
-                
-        #         else:
-        #             print("AgentB.ADD(taskA)失敗")
-        #     else:
-        #         print("AgentB.pop(taskB)失敗")
-        # else:
-        #     print("AgentA.pop(taskA)失敗")
 
-        # 交換が成功しなかった場合、元に戻す
         if not exchange_successful:
             AgentA.tasks = []
             AgentB.tasks = []
@@ -267,13 +253,7 @@ for negotiate_steps in range(N):
             # print(AgentB.tasks)
         else:
             count += 1
-            print('交換成功')
-            print(taskA.id)
-            print(taskB.id)
 
-
-        #    print(f'車両{AgentA.id}のルート：{AgentA.tasks}')
-        #    print(f'車両{AgentB.id}のルート：{AgentB.tasks}')
     # end = time.time()
     # time_diff = end - start
     #print(f"交換の実行時間: {time_diff} 秒")

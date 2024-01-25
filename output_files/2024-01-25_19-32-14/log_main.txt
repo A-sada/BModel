@@ -1,0 +1,11 @@
+steps 0 CVN 32 CRT 3060 n_neg 0.
+steps 1 CVN 32 CRT 3091 n_neg 40.
+steps 2 CVN 32 CRT 3467 n_neg 29.
+steps 3 CVN 32 CRT 3396 n_neg 23.
+steps 4 CVN 32 CRT 3416 n_neg 19.
+steps 5 CVN 32 CRT 3418 n_neg 14.
+steps 6 CVN 32 CRT 3341 n_neg 11.
+steps 7 CVN 32 CRT 3376 n_neg 9.
+steps 8 CVN 32 CRT 3437 n_neg 9.
+steps 9 CVN 32 CRT 3418 n_neg 8.
+steps 10 CVN 32 CRT 3418 n_neg 7.
