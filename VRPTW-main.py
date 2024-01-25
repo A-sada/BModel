@@ -1,5 +1,5 @@
 
-from initialsolution import assign_tasks_to_vehicles_with_insert,read_task
+from initial_ver2 import *
 from classes import *
 import random
 from datetime import datetime
@@ -15,7 +15,7 @@ run_num = 0
 tasks = []  # タスクを保存するためのリスト
 vehicles = []
 no_runs=[]
-N=10
+N=1000
 
 #時間に関する掲示板
 b_board = pd.DataFrame({
@@ -65,7 +65,7 @@ zones = create_time_zones(max_time,n_zones)
 dep_x = tasks[0].x_coordinate
 dep_y = tasks[0].y_coordinate
 tasks.pop(0)
-random.shuffle(tasks)
+# random.shuffle(tasks)
 bulletin_board = Balletin(False,b_board,stay_areas_bb, max_xy,n,zones)
 # タスクを車両に割り当て（時間制約を含む）
 bulletin_board.dep_x = dep_x
@@ -195,7 +195,7 @@ for negotiate_steps in range(N):
     time_diff = end - start
     #print(f"sign_contracts関数の実行時間: {time_diff} 秒")
     for contract in agreements:
-        if contract in contracts_signed.get(contract.vehicleA, [0]) and \
+        if contract in contracts_signed.get(contract.vehicleA, [0]) or \
            contract in contracts_signed.get(contract.vehicleB, [0]):
             A_list= contracts_signed.get(contract.vehicleA, [0])
             B_list= contracts_signed.get(contract.vehicleB, [0])

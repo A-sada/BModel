@@ -358,8 +358,7 @@ def plot_vehicle_routes(vehicles,directory_name,negotiate_steps):
 
         # ルートをプロット
         plt.plot(x_coords, y_coords, marker=markers[i % len(markers)], color=colors[i % len(colors)], label=f'Vehicle {vehicle.id}')
-        for task in vehicle.tasks:
-            plt.text(task.x_coordinate, task.y_coordinate, str(task.id))  # タスクIDを表示
+
 
     plt.xlabel('X Coordinate')
     plt.ylabel('Y Coordinate')

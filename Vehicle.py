@@ -175,6 +175,7 @@ class Vehicle_BASE:
     def pop(self,task):
         if task in self.tasks:
             self.tasks.remove(task)
+            self.current_weight -= task.weight
             return True
         else:
             return False

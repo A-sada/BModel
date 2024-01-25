@@ -10,7 +10,7 @@ from VRPTW_functions import find_time_zone,find_vehicles_in_neighboring_areas,fi
 from classes import *
 import copy
 
- 
+#交換希望タスクのランダム性
 
 class Vehicle(Vehicle_BASE):
 #TypeA
@@ -43,57 +43,15 @@ class Vehicle(Vehicle_BASE):
                         self.offer_nego_list.append(ofe)
                         
                 return self.offer_nego_list
-        coordinates = np.array([[task.x_coordinate, task.y_coordinate] for task in self.tasks])
-        scaler = MinMaxScaler()
-        normalized_coordinates = scaler.fit_transform(coordinates)
+        offer_cost ={}
+        for task in self.tasks:
+            offer_cost[task] = self.calculate_differ_distance(task,None)
         
-        # 実際のK-meansクラスタリング
-        def calculate_sse_changes(sse):
-            sse_changes = []
-            for i in range(1, len(sse)):
-                if sse[i-1] ==0:
-                    sse_changes.append(0)
-                else:
-                    sse_changes.append((sse[i-1] - sse[i]) / sse[i-1])
-            return sse_changes
-
-        # データポイント（タスク）の総数を取得
-        num_samples = len(normalized_coordinates)
-
-        # クラスタ数の最大値を設定（データポイントの数に基づく）
-        max_clusters = int(num_samples / 2)
-
-        # エルボー法によるクラスタ数の決定
-        sse = []
-        for k in range(1, max_clusters + 1):  # クラスタ数は1からmax_clustersまで
-            kmeans = KMeans(n_clusters=k, n_init=10)
-            kmeans.fit(normalized_coordinates)
-            sse.append(kmeans.inertia_)
-
-        # SSEの減少率の変化を計算
-        sse_changes = calculate_sse_changes(sse)
-        if not sse_changes:
-            optimal_clusters = 1
-        
-        else:
-        # 最も大きな変化を示すクラスタ数を選択
-            optimal_clusters = sse_changes.index(max(sse_changes)) + 2  # +2 は、インデックス補正（1から始まるクラスタ数と合わせるため）
-        if optimal_clusters <= len(self.tasks):
-            optimal_clusters = 2
-        # 実際のK-meansクラスタリング
-        kmeans = KMeans(n_clusters=optimal_clusters,n_init=10)
-        kmeans.fit(normalized_coordinates)
-        task_clusters = kmeans.labels_
-
-        # 各クラスタのタスク数を計算
-        cluster_counts = Counter(task_clusters)
-
-        # 最もタスクが多いクラスタを特定
-        most_common_cluster = cluster_counts.most_common(1)[0][0]
-
-        # 最もタスクが多いクラスタ以外に分類されたタスクのリスト
-        other_cluster_tasks = [task for task, cluster in zip(self.tasks, task_clusters) if cluster != most_common_cluster]
-        
+        sorted_cost = [k for k,v in sorted(offer_cost.items(), key=lambda x:x[1])]
+        other_cluster_tasks = []    
+        for num in range(int(len(self.tasks)/2)+1):
+            other_cluster_tasks.append(sorted_cost.pop(0))
+            
         if self.current_weight >= self.max_weight:
             wei = self.max_weight/len(self.tasks)
 
@@ -343,28 +301,7 @@ class Vehicle(Vehicle_BASE):
         return True
     
     def least_cost_time_insertion_index(self , new_task):
-        # def calculate_total_distance(tasks):
-        #     # ここに移動距離の計算ロジックを実装
-        #     total_distance = 0
-        #     for i in range(len(tasks) - 1):
-        #         total_distance += euclidean_distance(tasks[i], tasks[i + 1])
-        #     return total_distance
 
-        # best_position = None
-        # min_distance = 100000000000
-        # route = copy.deepcopy(self.tasks)
-        # check_route = copy.deepcopy(route)
-        # for i in range(len(route) + 1):
-        #     new_tasks = route[:i] + [new_task] + route[i:]
-        #     current_distance = calculate_total_distance(new_tasks)
-        #     check_route = copy.deepcopy(route)
-        #     check_route.insert(i,new_task)
-        #     if current_distance < min_distance:
-        #         if self.route_check(check_route,self.dep_x,self.dep_y) != True:
-        #             min_distance = current_distance
-        #             best_position = i
-
-        # return best_position
         def calculate_additional_distance(tasks, new_task, insertion_index):
             if not tasks:
                 return 0
