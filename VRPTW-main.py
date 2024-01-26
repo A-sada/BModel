@@ -9,8 +9,8 @@ import time
 from balletin_are_search import create_time_zones
 from fun_for_test import route_check,check_arriva_list
 from VRPTW_functions import *
-# from initialsolution2 import *
-from initial_ver2 import *
+from initialsolution import *
+# from initial_ver2 import *
 # from initial_ver2 import *
 run_num = 0
 tasks = []  # タスクを保存するためのリスト
@@ -329,7 +329,7 @@ for negotiate_steps in range(N):
     log_CVN.append(len(vehicles))
     log_CRT.append(sum_travel_time(vehicles))
     log_nego.append(count)
-filename = os.path.join(directory_name, "log_main.txt")
+filename = os.path.join(directory_name, "1log_main.txt")
 with open(filename, 'w') as f:
     for i in range(len(log_nego)):
         # ファイル名を生成

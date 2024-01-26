@@ -48,7 +48,8 @@ class Vehicle_BASE:
         return
     
     def accept_or_reject(self,offer):
-
+        if len(self.tasks) < 3:
+            return False    
         #交渉の受け入れの是非を実装
         if self.check_offer(offer.get("taskB")) == True:
             return True

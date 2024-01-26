@@ -143,10 +143,13 @@ def calculate_cost_saving(task_list,taskA,taskB,route,bulletin_board):
     #print("taskB",taskB)
     #print(route)
     remove_task = taskA if taskA in route else None
-    remove_task = taskB if taskB in route else None
+    if remove_task == None:
+        remove_task = taskB if taskB in route else None
+
 
     give_task = taskA if taskA not in route else None
-    give_task = taskB if taskB not in route else None
+    if give_task == None:
+        give_task = taskB if taskB not in route else None
 
 
     # 交換でのタスクの交換によるスラックタイムの差分・コストの変化を計算
@@ -331,6 +334,8 @@ def add_task(task,pac_list,route,bulletin_board):
 def cal_travel_time(route,dep_x,dep_y):
     time = 0
     current_time = 0
+    if len(route) == 0:
+        return 0
     for i in range(len(route)):
         if i == 0:
             time += euclidean_distance(Task(0,dep_x,dep_y,0,0,0,0),route[i])

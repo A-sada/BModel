@@ -42,7 +42,7 @@ class Vehicle(Vehicle_BASE):
                         offer_id += 1
                         self.offer_nego_list.append(ofe)
                         
-                return self.offer_nego_list
+            return self.offer_nego_list
         coordinates = np.array([[task.x_coordinate, task.y_coordinate] for task in self.tasks])
         scaler = MinMaxScaler()
         normalized_coordinates = scaler.fit_transform(coordinates)
@@ -228,10 +228,12 @@ class Vehicle(Vehicle_BASE):
     def calculate_cost_saving(self,agreements: Agree):
         cost_saving = 0
         remove_task = agreements.taskA if agreements.taskA in self.tasks else None
-        remove_task = agreements.taskB if agreements.taskB in self.tasks else None
+        if remove_task == None:
+            remove_task = agreements.taskB if agreements.taskB in self.tasks else None
 
         give_task = agreements.taskA if agreements.taskA not in self.tasks else None
-        give_task = agreements.taskB if agreements.taskB not in self.tasks else None
+        if give_task == None:
+            give_task = agreements.taskB if agreements.taskB not in self.tasks else None
 
         # 交換でのタスクの交換によるスラックタイムの差分・コストの変化を計算
         slack_cost = self.calculate_differ_slack(self.tasks,remove_task,give_task)
