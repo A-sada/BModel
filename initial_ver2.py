@@ -124,11 +124,14 @@ def assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y):
                     min_cost = cost_back(car, task)
                     min_cost_car = car
             if min_cost_car == None:
-                new_vehicle = Vehicle(run_num, max_weight,dep_x, dep_y)
-                new_vehicle.tasks.append(task)
-                new_vehicle.current_weight += task.weight
-                vehicles.append(new_vehicle)
-                run_num += 1
+                if run_num <26:
+                    new_vehicle = Vehicle(run_num, max_weight,dep_x, dep_y)
+                    new_vehicle.tasks.append(task)
+                    new_vehicle.current_weight += task.weight
+                    vehicles.append(new_vehicle)
+                    run_num += 1
+                else:
+                    tasks.append(task)
             else:
                 task_add(min_cost_car,task,dep_x,dep_y)
     return run_num

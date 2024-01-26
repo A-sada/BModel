@@ -1,0 +1,16 @@
+steps 0 CVN 267 CRT 203315 n_neg 0.
+steps 1 CVN 267 CRT 204972 n_neg 60.
+steps 2 CVN 267 CRT 211434 n_neg 96.
+steps 3 CVN 267 CRT 213831 n_neg 116.
+steps 4 CVN 267 CRT 223912 n_neg 135.
+steps 5 CVN 267 CRT 233706 n_neg 148.
+steps 6 CVN 267 CRT 243675 n_neg 147.
+steps 7 CVN 267 CRT 249883 n_neg 145.
+steps 8 CVN 267 CRT 252109 n_neg 100.
+steps 9 CVN 267 CRT 254072 n_neg 90.
+steps 10 CVN 267 CRT 256113 n_neg 80.
+steps 11 CVN 267 CRT 256759 n_neg 84.
+steps 12 CVN 267 CRT 255281 n_neg 71.
+steps 13 CVN 267 CRT 254201 n_neg 76.
+steps 14 CVN 267 CRT 255516 n_neg 71.
+steps 15 CVN 267 CRT 255516 n_neg 11.

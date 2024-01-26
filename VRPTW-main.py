@@ -1,5 +1,3 @@
-
-from initial_ver2 import *
 from classes import *
 import random
 from datetime import datetime
@@ -11,11 +9,14 @@ import time
 from balletin_are_search import create_time_zones
 from fun_for_test import route_check,check_arriva_list
 from VRPTW_functions import *
+# from initialsolution2 import *
+from initial_ver2 import *
+# from initial_ver2 import *
 run_num = 0
 tasks = []  # タスクを保存するためのリスト
 vehicles = []
 no_runs=[]
-N=1000
+N=100
 
 #時間に関する掲示板
 b_board = pd.DataFrame({
@@ -65,7 +66,7 @@ zones = create_time_zones(max_time,n_zones)
 dep_x = tasks[0].x_coordinate
 dep_y = tasks[0].y_coordinate
 tasks.pop(0)
-# random.shuffle(tasks)
+random.shuffle(tasks)
 bulletin_board = Balletin(False,b_board,stay_areas_bb, max_xy,n,zones)
 # タスクを車両に割り当て（時間制約を含む）
 bulletin_board.dep_x = dep_x
@@ -222,37 +223,40 @@ for negotiate_steps in range(N):
         taskB = sig.taskB
         routeA =[]
         routeB =[]
-        for task in AgentA.tasks:
-            routeA.append(task)
-        for task in AgentB.tasks:
-            routeB.append(task)
-        A_weiht = AgentA.current_weight
-        B_weiht = AgentB.current_weight
+        if AgentA.exchange_flag == 0 and AgentB.exchange_flag == 0:
+            for task in AgentA.tasks:
+                routeA.append(task)
+            for task in AgentB.tasks:
+                routeB.append(task)
+            A_weiht = AgentA.current_weight
+            B_weiht = AgentB.current_weight
 
-        exchange_successful = False
-        if taskB is None:
-            if AgentA.pop(taskA) :
-                if AgentB.add(taskA) :
+            exchange_successful = False
+            if taskB is None:
+                if AgentA.pop(taskA) :
+                    if AgentB.add(taskA) :
+                        exchange_successful = True
+            # 交換が成功したかどうかを追跡するためのフラグ
+            elif AgentA.pop(taskA) and AgentB.pop(taskB) :
+                if AgentA.add(taskB)  and AgentB.add(taskA) :
                     exchange_successful = True
-        # 交換が成功したかどうかを追跡するためのフラグ
-        elif AgentA.pop(taskA) and AgentB.pop(taskB) :
-            if AgentA.add(taskB)  and AgentB.add(taskA) :
-                exchange_successful = True
 
-        if not exchange_successful:
-            AgentA.tasks = []
-            AgentB.tasks = []
-            AgentA.tasks = routeA
-            AgentB.tasks = routeB
-            AgentA.current_weight = A_weiht
-            AgentB.current_weight = B_weiht
-            # print('交換失敗')
-            # print(taskA.id)
-            # print(taskB.id)
-            # print(AgentA.tasks)
-            # print(AgentB.tasks)
-        else:
-            count += 1
+            if not exchange_successful:
+                AgentA.tasks = []
+                AgentB.tasks = []
+                AgentA.tasks = routeA
+                AgentB.tasks = routeB
+                AgentA.current_weight = A_weiht
+                AgentB.current_weight = B_weiht
+                # print('交換失敗')
+                # print(taskA.id)
+                # print(taskB.id)
+                # print(AgentA.tasks)
+                # print(AgentB.tasks)
+            else:
+                AgentA.exchange_flag += 1
+                AgentB.exchange_flag += 1
+                count += 1
 
     # end = time.time()
     # time_diff = end - start

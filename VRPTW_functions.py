@@ -366,3 +366,4 @@ def plot_vehicle_routes(vehicles,directory_name,negotiate_steps):
     plt.legend()
     save_path = os.path.join(directory_name, f'route_{negotiate_steps}.png')
     plt.savefig(save_path)
+    plt.close()

@@ -33,6 +33,7 @@ class Vehicle_BASE:
         self.Neg = 0
         self.over_task =[]
         self.arrival_time_list =[]
+        self.exchange_flag = 0
     #掲示板を取得
     def set_balletin(self,balletin : Balletin):
         self.bulletin_board = balletin
@@ -43,6 +44,7 @@ class Vehicle_BASE:
     def step(self):
         self.offer_flag=0
         self.offer_nego_list=[]
+        self.exchange_flag = 0
         return
     
     def accept_or_reject(self,offer):

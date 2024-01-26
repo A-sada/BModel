@@ -6,11 +6,14 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from collections import Counter
 from balletin_are_search import calculate_dynamic_area
-from VRPTW_functions import find_time_zone,find_vehicles_in_neighboring_areas,find_vehicle_by_id, earliest_start_time_list, latest_start_time_list, euclidean_distance
+# from VRPTW_functions import find_time_zone,find_vehicles_in_neighboring_areas,find_vehicle_by_id, earliest_start_time_list, latest_start_time_list, euclidean_distance
 from classes import *
 import copy
+from VRPTW_functions import *
+from Vehicle_Negotiatior import VehicleNegotiator
 
-#交換希望タスクのランダム性
+#交換希望タスク　距離基準
+
 
 class Vehicle(Vehicle_BASE):
 #TypeA
@@ -96,7 +99,15 @@ class Vehicle(Vehicle_BASE):
                 available_vehicles.append(row['id'])
         return [vehicle for vehicle in vehicles if vehicle.id in available_vehicles]
     
-    
+    def make_neg_agent(self):
+        self.Neg = VehicleNegotiator(self.id,self.tasks,self.offer_flag,self.propose_task,name= self.id)
+        self.Neg.bulletin_board = self.bulletin_board
+        self.before_negotiation()
+        self.Neg.remove_list = self.over_task
+        self.Neg.arrival_time_list = self.arrival_time_list
+        return self.Neg
+    #交渉終了時に呼び出される
+    #交渉時に自分が提案者側かどうかを示すフラグの初期化
     def sign_contracts(self, list: List[Agree]):
         #実際に履行する契約のリストを返す
         #listはAgreeクラスのリスト
@@ -141,9 +152,9 @@ class Vehicle(Vehicle_BASE):
                 #閾値は変数
                 cost_border = 0
                 if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-                    cost_border = 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
+                    cost_border = 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +100000
                 else:
-                    cost_border = 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps 
+                    cost_border = 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps  +100000
                 #print(f"車両{self.id}のコスト閾値は{cost_border}")
                 #print(min_cost[task][0])
                 # if min_cost[task][0] < cost_border:

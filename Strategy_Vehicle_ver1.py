@@ -183,9 +183,9 @@ class Vehicle(Vehicle_BASE):
                 #閾値は変数
                 cost_border = 0
                 if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-                    cost_border = 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
-                else:
-                    cost_border = 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps 
+                    cost_border = 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +100000
+                else: 
+                    cost_border = -1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +100000
                 #print(f"車両{self.id}のコスト閾値は{cost_border}")
                 #print(min_cost[task][0])
                 # if min_cost[task][0] < cost_border:
@@ -411,8 +411,8 @@ class Vehicle(Vehicle_BASE):
         return optimal_position
 
     
-    def step(self):
-        return super().step()
+    # def step(self):
+    #     return super().step()
     
     def find_task(self, task_id):
         # IDに基づいてタスクを探す
