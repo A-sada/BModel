@@ -102,7 +102,7 @@ log_CRT=[]
 log_CVN.append(len(vehicles))
 log_CRT.append(sum_travel_time(vehicles))
 log_nego=[0]
-
+Go_flag = False
 bulletin_board.max_steps = N
 for negotiate_steps in range(N):
     start = time.time()
@@ -273,7 +273,9 @@ for negotiate_steps in range(N):
         if len(car.tasks)== 0:
             no_runs.append(car)
             vehicles.remove(car)
-            #vehicles.pop(car)
+            if car in vehicles:
+                print("error")
+                            #vehicles.pop(car)
             #del vehicles[zzz]
             #zzz += 1
             # id = 5 の行のインデックスを見つける
@@ -288,10 +290,10 @@ for negotiate_steps in range(N):
             car.bulletin_update(max_xy,max_time,zones,n)
         zzz += 1
         flag =0
-        for pac in car.arrival_time_list:
-            if pac.late_start_time - pac.earliest_start_time <= 0:
-                flag ==1
-        # if flag == 1:
+        # for pac in car.arrival_time_list:
+        #     if pac.late_start_time - pac.earliest_start_time <= 0:
+        #         flag ==1
+        # # if flag == 1:
         #     for task in car.arrival_time_list:
         #         if task.late_start_time < 0:
         #             print(task.late_start_time)
