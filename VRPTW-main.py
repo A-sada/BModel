@@ -109,7 +109,8 @@ with open(filename, 'w') as f:
     # for i in range(len(log_nego)):
         # ファイル名を生成
     f.write(f"steps {0} CVN {log_CVN[0]} CRT {log_CRT[i]} n_neg {log_nego[0]}.\n")
-for negotiate_steps in range(N/2+1):
+MMM = int(N/2 + 1)
+for negotiate_steps in range(MMM):
     start = time.time()
     for car in vehicles:
         car.first_step()
