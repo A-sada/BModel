@@ -245,52 +245,65 @@ def calculate_differ_distance(route,taskA,taskB,bulletin_board,pac_list):
     return distance
     #距離が短くなれば負の値を返す
 
-def least_cost_time_insertion_index(route, new_task, pac_list,bulletin_board):
+def least_cost_time_insertion_index(route,new_task,pac_list,bulletin_board):
+        if not isinstance(new_task, Task):  # 仮定として Task というクラスが存在するとします。
+            print("エラー: 'new_task' が Task オブジェクトではありません。")
+            return False
+        min_cost = float('inf')
+        best_position = None
+        cost = 0
+        if len(route) == 0:
+            return False
+        # 車両の開始位置から新しいタスクまでの距離を計算
+        start_task = Task(0, bulletin_board.dep_x, bulletin_board.dep_y, 0, 0, 0, 0)  # 仮の開始位置
+        travel_time_from_start = euclidean_distance(start_task, new_task)
+        if travel_time_from_start <= new_task.due_date :
+            if travel_time_from_start + new_task.service_time + euclidean_distance(new_task, route[0]) <= route[0].due_date: 
+                list = copy.deepcopy(pac_list)
+                list.insert(0,pac_task(new_task))
+                earliest_start_time_list(list,bulletin_board.dep_x,bulletin_board.dep_y)
+                latest_start_time_list(list)
+                cost = calculate_slacktime(list)
+                if min_cost > cost:
+                    min_cost = cost
+                    best_position = 0
 
-    def calculate_additional_distance(tasks, new_task, insertion_index):
-        if not tasks:
-            return 0
 
-        # 挿入位置がリストの先頭の場合
-        if insertion_index == 0:
-            return euclidean_distance(new_task, tasks[0])
+        # 各タスク間での新しいタスクの挿入を試みる
+        for i in range(len(route) - 1):
+            current_task = route[i]
+            next_task = route[i + 1]
 
-        # 挿入位置がリストの末尾の場合
-        elif insertion_index == len(tasks):
-            return euclidean_distance(tasks[-1], new_task)
+            # 現在のタスクの終了時間を計算
+            current_task_end_time = current_task.ready_time + current_task.service_time
 
-        # 挿入位置がリストの中間の場合
-        else:
-            distance_before_insertion = euclidean_distance(tasks[insertion_index - 1], tasks[insertion_index])
-            distance_after_insertion = euclidean_distance(tasks[insertion_index - 1], new_task) + \
-                                    euclidean_distance(new_task, tasks[insertion_index])
-            return distance_after_insertion - distance_before_insertion
-    
-    def is_within_time_window(new_task, prev_task, next_task):
-        if prev_task is None:
-            return new_task.ready_time + new_task.service_time <= next_task.task.due_date - euclidean_distance(new_task, next_task.task)
-        elif next_task is None:
-            return prev_task.earliest_start_time + prev_task.task.service_time <= new_task.due_date - euclidean_distance(prev_task.task,new_task)
-        else:
-            return prev_task.earliest_start_time + prev_task.task.service_time <= new_task.due_date - euclidean_distance(prev_task.task,new_task) \
-                and new_task.ready_time + new_task.service_time <= next_task.task.due_date - euclidean_distance(new_task, next_task.task)
-        
+            # 新しいタスクへの移動に必要な時間を計算
+            travel_time_to_new_task = euclidean_distance(current_task, new_task)
 
-    min_additional_distance = float('inf')
-    optimal_position = None
+            # 新しいタスクのサービス終了時間を計算
+            new_task_end_time = current_task_end_time + travel_time_to_new_task + new_task.service_time
 
-    for insertion_index in range(len(route) + 1):
-        prev_task = pac_list[insertion_index - 1] if insertion_index > 0 else None
-        next_task = pac_list[insertion_index] if insertion_index < len(route) else None
+            # 次のタスクへの移動に必要な時間を計算
+            travel_time_to_next_task = euclidean_distance(new_task, next_task)
 
-    # 時間窓制約を満たしているかを確認します
-        if is_within_time_window(new_task, prev_task, next_task):
-            additional_distance = calculate_additional_distance(route, new_task, insertion_index)
-            if additional_distance < min_additional_distance:
-                min_additional_distance = additional_distance
-                optimal_position = insertion_index
+            # 次のタスクの開始時間を計算
+            next_task_start_time = new_task_end_time + travel_time_to_next_task
 
-    return optimal_position
+            # 新しいタスクがdue_date前に終了し、次のタスクが時間内に開始できるかどうかを確認
+            if current_task_end_time + travel_time_to_new_task <= new_task.due_date and next_task_start_time <= next_task.due_date:
+                list = copy.deepcopy(pac_list)
+                list.insert(i+1,pac_task(new_task))
+                earliest_start_time_list(list,bulletin_board.dep_x,bulletin_board.dep_y)  
+                latest_start_time_list(list)
+                cost = calculate_slacktime(list)
+                if min_cost > cost:
+                    min_cost = cost
+                    best_position = i+1
+
+        if best_position != None:
+            return best_position
+        return None
+
 
 
 def remove_task(task,route):
