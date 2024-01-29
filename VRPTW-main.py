@@ -16,7 +16,7 @@ run_num = 0
 tasks = []  # タスクを保存するためのリスト
 vehicles = []
 no_runs=[]
-N=100
+N=200
 
 #時間に関する掲示板
 b_board = pd.DataFrame({
@@ -104,7 +104,12 @@ log_CRT.append(sum_travel_time(vehicles))
 log_nego=[0]
 Go_flag = False
 bulletin_board.max_steps = N
-for negotiate_steps in range(N):
+filename = os.path.join(directory_name, "1log_main.txt")
+with open(filename, 'w') as f:
+    # for i in range(len(log_nego)):
+        # ファイル名を生成
+    f.write(f"steps {0} CVN {log_CVN[0]} CRT {log_CRT[i]} n_neg {log_nego[0]}.\n")
+for negotiate_steps in range(N/2+1):
     start = time.time()
     for car in vehicles:
         car.first_step()
@@ -254,8 +259,8 @@ for negotiate_steps in range(N):
                 # print(AgentA.tasks)
                 # print(AgentB.tasks)
             else:
-                AgentA.exchange_flag += 1
-                AgentB.exchange_flag += 1
+                AgentA.exchange_flag = 1
+                AgentB.exchange_flag = 1
                 count += 1
 
     # end = time.time()
@@ -331,8 +336,8 @@ for negotiate_steps in range(N):
     log_CVN.append(len(vehicles))
     log_CRT.append(sum_travel_time(vehicles))
     log_nego.append(count)
-filename = os.path.join(directory_name, "1log_main.txt")
-with open(filename, 'w') as f:
-    for i in range(len(log_nego)):
-        # ファイル名を生成
-        f.write(f"steps {i} CVN {log_CVN[i]} CRT {log_CRT[i]} n_neg {log_nego[i]}.\n")
+    filename = os.path.join(directory_name, "1log_main.txt")
+    with open(filename, 'a') as f:
+        # for i in range(len(log_nego)):
+            # ファイル名を生成
+        f.write(f"steps {negotiate_steps+1} CVN {log_CVN[negotiate_steps+1]} CRT {log_CRT[negotiate_steps+1]} n_neg {log_nego[negotiate_steps+1]}.\n")

@@ -216,6 +216,7 @@ class Vehicle(Vehicle_BASE):
 
         signed = []
         for i in sorted_cost:
+            # if len(signed) < len(list)*0.8:
             signed.append(i.agre)
         #print(f"車両ごとの署名リストの長さ：{len(signed)}")
         # print(signed)
@@ -275,8 +276,9 @@ class Vehicle(Vehicle_BASE):
 
         after_slack_time = self.calculate_slacktime(changed_list)
         #スラックタイムが増えれば負の値を返す   
-        return before_slack_time - after_slack_time
+        # return before_slack_time - after_slack_time
         #スラックタイムが増えれば負の値を返す
+        return after_slack_time - before_slack_time
     
 
     def calculate_over_window(self,route):

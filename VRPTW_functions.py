@@ -193,7 +193,7 @@ def calculate_differ_slack(pac_list,remove,add,route,bulletin_board):
     after_slack_time = calculate_slacktime(changed_list)
     #スラックタイムが増えれば負の値を返す   
     return after_slack_time - before_slack_time
-    #スラックタイムが増えれば負の値を返す
+    #スラックタイムが減れば負の値を返す
 
 
 def calculate_over_window(route):

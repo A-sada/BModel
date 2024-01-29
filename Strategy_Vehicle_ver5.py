@@ -9,10 +9,13 @@ from balletin_are_search import calculate_dynamic_area
 # from VRPTW_functions import find_time_zone,find_vehicles_in_neighboring_areas,find_vehicle_by_id, earliest_start_time_list, latest_start_time_list, euclidean_distance
 from classes import *
 import copy
-from VRPTW_functions import *
+from VRPTW_functions2 import *
 from Vehicle_Negotiatior2 import VehicleNegotiator
-import random
-#交換希望タスクのランダム性
+
+#交換希望タスク　距離基準
+#戦略B
+#コスト関数2
+
 
 class Vehicle(Vehicle_BASE):
 #TypeA
@@ -24,17 +27,43 @@ class Vehicle(Vehicle_BASE):
 
             return True
         return self.is_task_assignable_with_or_tools(task,self.dep_x,self.dep_y)
-    
+        
     def offer_on_negotiation(self, run_cars, offer_id,vehicles):
-        other_cluster_tasks = []
-        for task in self.tasks:
-            # 1から100までの間の乱数を生成
-            random_number = random.randint(1, 100)
-
-            # その値が51以下の場合
-            if random_number <= 51:
-                other_cluster_tasks.append(task)
+        if len(self.tasks) < 3:
+            for task in self.tasks:
+                vehicles_in_neighbors=[]
+                task_area = calculate_dynamic_area(task.x_coordinate,task.y_coordinate,self.bulletin_board.X, self.bulletin_board.n)
+                task_time_zone = find_time_zone(task.ready_time,self.bulletin_board.zones)
+                vehicles_in_neighbors = find_vehicles_in_neighboring_areas(task_time_zone, task_area, self.bulletin_board.area_board) #車両IDが帰ってくる
                 
+                vehicles_in_neighbors.extend(self.find_available_vehicles(self.bulletin_board.time_board, task.ready_time,task.due_date,vehicles))
+                if self.id in vehicles_in_neighbors:
+                    vehicles_in_neighbors.remove(self.id)
+
+                for vehicle in vehicles_in_neighbors:
+                    car = find_vehicle_by_id(vehicle, run_cars)
+                    if car != None:
+                        ofe=Offer(offer_id,self.id,car.id,task)
+                        offer_id += 1
+                        self.offer_nego_list.append(ofe)
+                        
+                return self.offer_nego_list
+        offer_cost ={}
+        for task in self.tasks:
+            offer_cost[task] = self.calculate_differ_distance(task,None)
+        
+        sorted_cost = [k for k,v in sorted(offer_cost.items(), key=lambda x:x[1])]
+        other_cluster_tasks = []    
+        for num in range(int(len(self.tasks)/2)+1):
+            other_cluster_tasks.append(sorted_cost.pop(0))
+            
+        if self.current_weight >= self.max_weight:
+            wei = self.max_weight/len(self.tasks)
+
+            for task in self.tasks:
+                if task.weight >= wei:
+                    if task not in other_cluster_tasks:
+                        other_cluster_tasks.append(task)
 
 
         for task in other_cluster_tasks:
@@ -63,7 +92,14 @@ class Vehicle(Vehicle_BASE):
         return self.offer_nego_list
 
 
-
+    def make_neg_agent(self):
+        self.Neg = VehicleNegotiator(self.id,self.tasks,self.offer_flag,self.propose_task,name= self.id)
+        self.Neg.bulletin_board = self.bulletin_board
+        self.before_negotiation()
+        self.Neg.remove_list = self.over_task
+        self.Neg.arrival_time_list = self.arrival_time_list
+        return self.Neg
+    
     def find_available_vehicles(self,b_board, task_ready_time, task_due_date,vehicles):
         #タスク時間が，車両の稼動時間前後の車両を探す
         available_vehicles = []
@@ -72,15 +108,7 @@ class Vehicle(Vehicle_BASE):
                 available_vehicles.append(row['id'])
         return [vehicle for vehicle in vehicles if vehicle.id in available_vehicles]
     
-    def make_neg_agent(self):
-        self.Neg = VehicleNegotiator(self.id,self.tasks,self.offer_flag,self.propose_task,name= self.id)
-        self.Neg.bulletin_board = self.bulletin_board
-        self.before_negotiation()
-        self.Neg.remove_list = self.over_task
-        self.Neg.arrival_time_list = self.arrival_time_list
-        return self.Neg
-    #交渉終了時に呼び出される
-    #交渉時に自分が提案者側かどうかを示すフラグの初期化
+    
     def sign_contracts(self, list: List[Agree]):
         #実際に履行する契約のリストを返す
         #listはAgreeクラスのリスト
@@ -125,9 +153,9 @@ class Vehicle(Vehicle_BASE):
                 #閾値は変数
                 cost_border = 0
                 if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
-                    cost_border = 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps
-                else:
-                    cost_border = 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps 
+                    cost_border = 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +100000
+                else: 
+                    cost_border = -1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +100000
                 #print(f"車両{self.id}のコスト閾値は{cost_border}")
                 #print(min_cost[task][0])
                 # if min_cost[task][0] < cost_border:
@@ -158,6 +186,7 @@ class Vehicle(Vehicle_BASE):
 
         signed = []
         for i in sorted_cost:
+            # if len(signed) < len(list)*0.8:
             signed.append(i.agre)
         #print(f"車両ごとの署名リストの長さ：{len(signed)}")
         # print(signed)
@@ -170,28 +199,30 @@ class Vehicle(Vehicle_BASE):
     def calculate_cost_saving(self,agreements: Agree):
         cost_saving = 0
         remove_task = agreements.taskA if agreements.taskA in self.tasks else None
-        remove_task = agreements.taskB if agreements.taskB in self.tasks else None
+        if remove_task == None:
+            remove_task = agreements.taskB if agreements.taskB in self.tasks else None
 
         give_task = agreements.taskA if agreements.taskA not in self.tasks else None
-        give_task = agreements.taskB if agreements.taskB not in self.tasks else None
+        if give_task == None:
+            give_task = agreements.taskB if agreements.taskB not in self.tasks else None
 
         # 交換でのタスクの交換によるスラックタイムの差分・コストの変化を計算
         slack_cost = self.calculate_differ_slack(self.tasks,remove_task,give_task)
 
         # 交換でのタスクの交換によるover_windowの差分・コストの変化を計算
-        over_cost = self.caluculate_differ_over_window(self.tasks,remove_task,give_task)
+        # over_cost = self.caluculate_differ_over_window(self.tasks,remove_task,give_task)
         # 交換でのタスクの交換による距離の差分・コストの変化を計算
         distans_cost = self.calculate_differ_distance(remove_task,give_task)
 
-        slack_late = 0
+        slack_late = 0.5
         #over_lateは，時間が進むにつれて値を大きくする
         #現在の時間はself.bulletin_board.n_stepで取得できる
         #最大時間はself.bulletin_board.max_stepで取得できる
         #over_costは前半ではほぼ無視をして，後半では大きくする
         #最後の25％の時間ではover_costをかなり大きくする
-        over_late = 0 * (self.bulletin_board.n_steps / self.bulletin_board.max_steps) ** 2
-        distance_late = 1
-        cost_saving = slack_late * slack_cost + over_late * over_cost + distance_late * distans_cost
+        # over_late = 10 * (self.bulletin_board.n_steps / self.bulletin_board.max_steps) ** 2
+        distance_late = 0.5
+        cost_saving = (-1)*slack_late * slack_cost  + distance_late * distans_cost
         #print(f"車両{self.id}のコスト削減は{cost_saving}")
         return cost_saving
 
@@ -215,8 +246,9 @@ class Vehicle(Vehicle_BASE):
 
         after_slack_time = self.calculate_slacktime(changed_list)
         #スラックタイムが増えれば負の値を返す   
-        return before_slack_time - after_slack_time
+        # return before_slack_time - after_slack_time
         #スラックタイムが増えれば負の値を返す
+        return after_slack_time - before_slack_time
     
 
     def calculate_over_window(self,route):
@@ -285,7 +317,28 @@ class Vehicle(Vehicle_BASE):
         return True
     
     def least_cost_time_insertion_index(self , new_task):
+        # def calculate_total_distance(tasks):
+        #     # ここに移動距離の計算ロジックを実装
+        #     total_distance = 0
+        #     for i in range(len(tasks) - 1):
+        #         total_distance += euclidean_distance(tasks[i], tasks[i + 1])
+        #     return total_distance
 
+        # best_position = None
+        # min_distance = 100000000000
+        # route = copy.deepcopy(self.tasks)
+        # check_route = copy.deepcopy(route)
+        # for i in range(len(route) + 1):
+        #     new_tasks = route[:i] + [new_task] + route[i:]
+        #     current_distance = calculate_total_distance(new_tasks)
+        #     check_route = copy.deepcopy(route)
+        #     check_route.insert(i,new_task)
+        #     if current_distance < min_distance:
+        #         if self.route_check(check_route,self.dep_x,self.dep_y) != True:
+        #             min_distance = current_distance
+        #             best_position = i
+
+        # return best_position
         def calculate_additional_distance(tasks, new_task, insertion_index):
             if not tasks:
                 return 0
@@ -332,8 +385,8 @@ class Vehicle(Vehicle_BASE):
         return optimal_position
 
     
-    def step(self):
-        return super().step()
+    # def step(self):
+    #     return super().step()
     
     def find_task(self, task_id):
         # IDに基づいてタスクを探す
@@ -370,11 +423,6 @@ class Vehicle(Vehicle_BASE):
             return route
         index = self.least_cost_time_insertion_index(task)
         if index == None:
-            for i in range(len(route)):
-                if route[i].task.due_date > task.due_date:
-                    index = i
-                    break
-        if index == None:
             return route
         route.insert(index,pac_task(task))
         return route
@@ -391,18 +439,8 @@ class Vehicle(Vehicle_BASE):
         index = None
         route = self.tasks
         index = self.least_cost_time_insertion_index(new_task)
-        if index  == None :
-            for i in range(len(route)+1):
-                if i == 0:
-                    route[i].due_date - euclidean_distance(route[i],new_task) > new_task.ready_time + new_task.service_time
-                    index = i
-                    break
-                if route[i].due_date > new_task.due_date:
-                    index = i
-                    break
-                if index == len(route):
-                    if route[-1].ready_time < new_task.due_date:
-                        index = len(route)
+        if index == None:
+            return False
         if index == len(route):
             if self.current_weight + new_task.weight < self.max_weight + 10 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps:
                 self.current_weight += new_task.weight

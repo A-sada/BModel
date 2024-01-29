@@ -11,7 +11,7 @@ from classes import Task
 from VRPTW_functions import *
 import copy
 """
-コスト関数を距離だけにする
+コスト関数をスラック距離だけにする
   """  
 import random
 
@@ -137,13 +137,13 @@ def calculate_cost_saving(task_list,taskA,taskB,route,bulletin_board):
 
 
     # 交換でのタスクの交換によるスラックタイムの差分・コストの変化を計算
-    # slack_cost = calculate_differ_slack(task_list,remove_task,give_task,route,bulletin_board)
+    slack_cost = calculate_differ_slack(task_list,remove_task,give_task,route,bulletin_board)
     # 交換でのタスクの交換によるover_windowの差分・コストの変化を計算
     # over_cost = caluculate_differ_over_window(task_list,remove_task,give_task,route,bulletin_board)
     # 交換でのタスクの交換による距離の差分・コストの変化を計算
     distans_cost = calculate_differ_distance(route,remove_task,give_task,bulletin_board,task_list)
 
-    slack_late = 0
+    slack_late = 0.5
 
 
     #over_lateは，時間が進むにつれて値を大きくする
@@ -151,10 +151,10 @@ def calculate_cost_saving(task_list,taskA,taskB,route,bulletin_board):
     #最大時間はbulletin_board.max_stepで取得できる
     #over_costは前半ではほぼ無視をして，後半では大きくする
     #最後の25％の時間ではover_costをかなり大きくする
-    over_late =0* (bulletin_board.n_steps / bulletin_board.max_steps) ** 2
-    distance_late = 1.0
+    # over_late =0* (bulletin_board.n_steps / bulletin_board.max_steps) ** 2
+    distance_late = 0.5
     # cost_saving = slack_late * slack_cost + over_late * over_cost + distance_late * distans_cost
-    cost_saving = distance_late * distans_cost
+    cost_saving = distance_late * distans_cost + slack_late * slack_cost
     return cost_saving
 
     

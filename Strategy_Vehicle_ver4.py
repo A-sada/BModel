@@ -13,6 +13,8 @@ from VRPTW_functions import *
 from Vehicle_Negotiatior import VehicleNegotiator
 
 #交換希望タスク　距離基準
+#戦略B
+#コスト関数1
 
 
 class Vehicle(Vehicle_BASE):
@@ -218,7 +220,7 @@ class Vehicle(Vehicle_BASE):
         #最後の25％の時間ではover_costをかなり大きくする
         over_late = 10 * (self.bulletin_board.n_steps / self.bulletin_board.max_steps) ** 2
         distance_late = 0.5
-        cost_saving = slack_late * slack_cost + over_late * over_cost + distance_late * distans_cost
+        cost_saving = (-1)*slack_late * slack_cost + over_late * over_cost + distance_late * distans_cost
         #print(f"車両{self.id}のコスト削減は{cost_saving}")
         return cost_saving
 
