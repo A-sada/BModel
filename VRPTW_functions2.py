@@ -245,29 +245,8 @@ def calculate_differ_distance(route,taskA,taskB,bulletin_board,pac_list):
     return distance
     #距離が短くなれば負の値を返す
 
-def least_cost_time_insertion_index(self , new_task):
-    # def calculate_total_distance(tasks):
-    #     # ここに移動距離の計算ロジックを実装
-    #     total_distance = 0
-    #     for i in range(len(tasks) - 1):
-    #         total_distance += euclidean_distance(tasks[i], tasks[i + 1])
-    #     return total_distance
+def least_cost_time_insertion_index(route, new_task, pac_list,bulletin_board):
 
-    # best_position = None
-    # min_distance = 100000000000
-    # route = copy.deepcopy(self.tasks)
-    # check_route = copy.deepcopy(route)
-    # for i in range(len(route) + 1):
-    #     new_tasks = route[:i] + [new_task] + route[i:]
-    #     current_distance = calculate_total_distance(new_tasks)
-    #     check_route = copy.deepcopy(route)
-    #     check_route.insert(i,new_task)
-    #     if current_distance < min_distance:
-    #         if self.route_check(check_route,self.dep_x,self.dep_y) != True:
-    #             min_distance = current_distance
-    #             best_position = i
-
-    # return best_position
     def calculate_additional_distance(tasks, new_task, insertion_index):
         if not tasks:
             return 0
@@ -300,13 +279,13 @@ def least_cost_time_insertion_index(self , new_task):
     min_additional_distance = float('inf')
     optimal_position = None
 
-    for insertion_index in range(len(self.tasks) + 1):
-        prev_task = self.arrival_time_list[insertion_index - 1] if insertion_index > 0 else None
-        next_task = self.arrival_time_list[insertion_index] if insertion_index < len(self.tasks) else None
+    for insertion_index in range(len(route) + 1):
+        prev_task = pac_list[insertion_index - 1] if insertion_index > 0 else None
+        next_task = pac_list[insertion_index] if insertion_index < len(route) else None
 
     # 時間窓制約を満たしているかを確認します
         if is_within_time_window(new_task, prev_task, next_task):
-            additional_distance = calculate_additional_distance(self.tasks, new_task, insertion_index)
+            additional_distance = calculate_additional_distance(route, new_task, insertion_index)
             if additional_distance < min_additional_distance:
                 min_additional_distance = additional_distance
                 optimal_position = insertion_index

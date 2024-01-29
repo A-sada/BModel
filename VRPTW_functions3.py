@@ -285,7 +285,7 @@ def least_cost_time_insertion_index(route, new_task, pac_list,bulletin_board):
 
     # 時間窓制約を満たしているかを確認します
         if is_within_time_window(new_task, prev_task, next_task):
-            additional_distance = calculate_additional_distance(self.tasks, new_task, insertion_index)
+            additional_distance = calculate_additional_distance(route, new_task, insertion_index)
             if additional_distance < min_additional_distance:
                 min_additional_distance = additional_distance
                 optimal_position = insertion_index
