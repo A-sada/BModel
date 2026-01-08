@@ -61,7 +61,13 @@ class VehicleNegotiator(SAONegotiator):
         #print(offer)
         return offer
     
-    def respond(self, state: SAOState, offer: Outcome, source: str):
+    def respond(self, state: SAOState, offer: Outcome | None = None, source: str | None = None, **kwargs):
+        if offer is None:
+            offer = getattr(state, "current_offer", None)
+        if offer is None:
+            offer = getattr(state, "current_proposal", None)
+        if offer is None:
+            return ResponseType.REJECT_OFFER
         cost_border = 1 * (self.bulletin_board.max_steps - self.bulletin_board.n_steps) / self.bulletin_board.max_steps +0
         # 応答のロジックを実装
         if not self.initial_offer_received:
