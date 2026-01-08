@@ -1,0 +1,11 @@
+steps 0 CVN 234 CRT 466439 n_neg 0.
+steps 1 CVN 234 CRT 423535 n_neg 116.
+steps 2 CVN 234 CRT 398970 n_neg 115.
+steps 3 CVN 234 CRT 378306 n_neg 113.
+steps 4 CVN 234 CRT 364422 n_neg 112.
+steps 5 CVN 234 CRT 352218 n_neg 114.
+steps 6 CVN 234 CRT 345746 n_neg 114.
+steps 7 CVN 234 CRT 339439 n_neg 116.
+steps 8 CVN 234 CRT 331045 n_neg 115.
+steps 9 CVN 234 CRT 324043 n_neg 115.
+steps 10 CVN 234 CRT 321260 n_neg 113.

@@ -30,7 +30,7 @@ class Vehicle(Vehicle_BASE):
         if self.bulletin_board.n_steps / self.bulletin_board.max_steps < 0.5:
 
             return True
-        return self.is_task_assignable_with_or_tools(task,self.dep_x,self.dep_y)
+        return True
         
     def offer_on_negotiation(self, run_cars, offer_id,vehicles):
         if len(self.tasks) < 4:

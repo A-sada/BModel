@@ -1,0 +1,85 @@
+Vehicle 0 has tasks [580, 132, 697, 375, 512, 79, 366, 287] with total weight 160.
+Vehicle 1 has tasks [576, 748, 681, 785, 774, 990, 661, 477, 370] with total weight 180.
+Vehicle 2 has tasks [713, 320, 520, 501, 825, 800, 106, 603, 174, 487, 581, 173, 759] with total weight 250.
+Vehicle 3 has tasks [296, 804, 665, 997, 285, 694, 194, 467, 695, 868, 127, 386, 780] with total weight 250.
+Vehicle 4 has tasks [333, 967, 271, 579, 709, 336, 2, 36, 482, 634, 775] with total weight 190.
+Vehicle 5 has tasks [241, 189, 308, 945, 551, 944, 850, 994, 156, 768, 933, 59] with total weight 190.
+Vehicle 6 has tasks [170, 141, 739, 19, 546, 416, 685, 254, 365, 211, 221, 649, 185, 865, 577] with total weight 270.
+Vehicle 7 has tasks [610, 420, 291, 684, 601, 524, 971, 635, 886, 955, 620] with total weight 210.
+Vehicle 8 has tasks [408, 88, 575, 437, 309, 936, 917, 869, 493, 506, 503, 324, 844] with total weight 280.
+Vehicle 9 has tasks [417, 278, 253, 790, 273, 968, 1, 461, 414, 215] with total weight 200.
+Vehicle 10 has tasks [821, 606, 943, 480, 484, 104, 627, 122, 897, 787, 248] with total weight 180.
+Vehicle 11 has tasks [473, 911, 829, 913, 582, 27, 677, 29, 632, 55, 272, 795, 329, 803, 686] with total weight 220.
+Vehicle 12 has tasks [760, 937, 62, 462, 794, 265, 705, 750, 609, 113, 737, 784] with total weight 230.
+Vehicle 13 has tasks [942, 394, 689, 86, 569, 298, 763, 61, 246, 169, 887, 208] with total weight 270.
+Vehicle 14 has tasks [838, 843, 837, 924, 814, 663, 91, 773, 247] with total weight 170.
+Vehicle 15 has tasks [518, 107, 516, 530, 345, 201, 918, 223, 853, 65, 139, 920] with total weight 300.
+Vehicle 16 has tasks [111, 413, 669, 195, 385, 594, 311, 93, 916, 260, 16, 490] with total weight 200.
+Vehicle 17 has tasks [10, 753, 217, 648, 374, 878, 118, 115, 341, 948] with total weight 220.
+Vehicle 18 has tasks [457, 935, 165, 863, 909, 427, 898, 846, 989, 237] with total weight 200.
+Vehicle 19 has tasks [720, 555, 188, 72, 369, 435, 11, 515, 259, 864, 302] with total weight 150.
+Vehicle 20 has tasks [58, 249, 995, 286, 4, 556, 980, 717, 411, 939, 75, 616, 766, 48] with total weight 260.
+Vehicle 21 has tasks [988, 662, 227, 541, 347, 682, 523, 357, 537, 123, 293] with total weight 190.
+Vehicle 22 has tasks [314, 483, 978, 563, 176, 228, 306, 802, 344, 432, 884, 478] with total weight 220.
+Vehicle 23 has tasks [914, 605, 337, 549, 820, 500, 178, 874, 479, 175, 361, 558, 979] with total weight 210.
+Vehicle 24 has tasks [143, 932, 922, 415, 453, 623, 956, 207, 149] with total weight 160.
+Vehicle 25 has tasks [322, 670, 792, 993, 889, 303, 723, 570, 756, 533, 505, 574, 692] with total weight 230.
+Vehicle 26 has tasks [350, 590, 292, 641, 525, 40, 633, 527, 528, 447] with total weight 200.
+Vehicle 27 has tasks [98, 356, 342, 73, 78, 364, 96, 746, 907, 769, 390, 47, 145, 235] with total weight 240.
+Vehicle 28 has tasks [589, 835, 566, 475, 359, 722, 110, 396, 653, 667] with total weight 220.
+Vehicle 29 has tasks [463, 133, 263, 288, 125, 799, 226, 371, 888, 404, 508] with total weight 230.
+Vehicle 30 has tasks [991, 730, 419, 981, 810, 238, 305, 630, 832, 808, 102, 25] with total weight 220.
+Vehicle 31 has tasks [987, 109, 481, 926, 20, 628, 231, 636, 74, 842, 315, 452, 283] with total weight 280.
+Vehicle 32 has tasks [423, 376, 972, 703, 42, 782, 614, 584, 146, 348, 53, 731, 977] with total weight 200.
+Vehicle 33 has tasks [138, 504, 277, 903, 881, 196, 270, 631, 316, 683, 466, 532, 407, 553] with total weight 300.
+Vehicle 34 has tasks [234, 444, 762, 340, 87, 22, 112, 704, 377, 947, 698, 719, 82] with total weight 200.
+Vehicle 35 has tasks [252, 383, 405, 401, 567, 142, 232, 83, 754, 360, 696, 150, 384] with total weight 250.
+Vehicle 36 has tasks [554, 639, 743, 901, 543, 446, 269, 362, 536, 714, 163] with total weight 220.
+Vehicle 37 has tasks [859, 587, 565, 363, 212, 37, 777, 923, 135, 930, 18] with total weight 280.
+Vehicle 38 has tasks [50, 346, 442, 382, 94, 999, 861, 301, 998, 312, 629, 643] with total weight 270.
+Vehicle 39 has tasks [499, 465, 451, 205, 510, 715, 381, 770, 297, 883, 931] with total weight 240.
+Vehicle 40 has tasks [449, 224, 693, 910, 700, 706, 244, 409, 621, 849, 454, 899] with total weight 220.
+Vehicle 41 has tasks [833, 535, 430, 560, 562, 578, 321, 819, 793, 645, 675] with total weight 200.
+Vehicle 42 has tasks [445, 318, 586, 431, 666, 839, 243, 129, 502, 919, 433] with total weight 230.
+Vehicle 43 has tasks [397, 540, 494, 448, 184, 927, 973, 781, 332, 657, 873] with total weight 250.
+Vehicle 44 has tasks [12, 172, 789, 815, 294, 912, 395, 779, 617] with total weight 210.
+Vehicle 45 has tasks [197, 776, 441, 17, 166, 393, 538, 373, 860, 755, 812, 151] with total weight 210.
+Vehicle 46 has tasks [826, 929, 858, 338, 9, 625, 117, 242, 262, 148, 847, 326, 354, 89] with total weight 280.
+Vehicle 47 has tasks [963, 313, 422, 474, 656, 716, 806, 162, 199, 250, 299, 711, 21] with total weight 270.
+Vehicle 48 has tasks [650, 872, 204, 497, 410, 954, 372, 66, 796, 81, 588] with total weight 180.
+Vehicle 49 has tasks [233, 726, 607, 331, 655, 496, 52, 894, 701, 295, 351, 192, 672] with total weight 290.
+Vehicle 50 has tasks [460, 279, 67, 352, 827, 275, 985, 274, 268, 668, 728, 807, 958, 975, 676, 15] with total weight 330.
+Vehicle 51 has tasks [155, 495, 471, 468, 534, 424, 32, 131, 190, 699, 319] with total weight 170.
+Vehicle 52 has tasks [77, 450, 957, 982, 469, 54, 159, 26, 854, 400, 879, 679, 966, 498, 157] with total weight 300.
+Vehicle 53 has tasks [183, 970, 438, 660, 434, 735, 489, 969, 962, 202, 816, 765, 644, 841, 152, 458] with total weight 250.
+Vehicle 54 has tasks [531, 406, 946, 783, 23, 960, 744, 85, 514, 100, 507] with total weight 210.
+Vehicle 55 has tasks [281, 164, 70, 678, 727, 147, 154, 618, 906, 367, 845] with total weight 190.
+Vehicle 56 has tasks [526, 511, 900, 542, 428, 92, 547, 893, 564, 80] with total weight 200.
+Vehicle 57 has tasks [280, 472, 539, 896, 885, 852, 136, 69, 813, 56, 778, 68, 615, 470] with total weight 270.
+Vehicle 58 has tasks [674, 161, 218, 595, 440, 464, 418, 198, 51, 300, 261, 239, 585, 256, 949] with total weight 240.
+Vehicle 59 has tasks [8, 121, 343, 771, 488, 788, 984, 284, 965, 732, 752] with total weight 240.
+Vehicle 60 has tasks [712, 210, 5, 831, 688, 140, 761, 327, 240, 976] with total weight 200.
+Vehicle 61 has tasks [598, 63, 867, 491, 890, 403, 521, 282, 940, 974, 114, 702, 624] with total weight 250.
+Vehicle 62 has tasks [509, 130, 230, 124, 876, 44, 266, 182, 751, 264, 353] with total weight 180.
+Vehicle 63 has tasks [767, 651, 870, 14, 180, 255, 76, 786, 214, 855, 928, 828, 742, 39, 710, 950, 6, 399] with total weight 270.
+Vehicle 64 has tasks [673, 652, 258, 24, 30, 276, 724, 402, 646, 128, 529, 902] with total weight 210.
+Vehicle 65 has tasks [455, 749, 1000, 738, 219, 203, 952, 323, 830, 934] with total weight 200.
+Vehicle 66 has tasks [545, 391, 426, 307, 895, 251, 429, 398, 209, 206, 544, 880, 747, 317] with total weight 290.
+Vehicle 67 has tasks [229, 459, 257, 718, 905, 836, 220, 721, 658, 35, 568, 304, 45] with total weight 270.
+Vehicle 68 has tasks [379, 613, 97, 602, 798, 325, 591, 593, 168, 153, 637, 882, 671, 959, 101, 334] with total weight 310.
+Vehicle 69 has tasks [891, 862, 103, 597, 599, 548, 191, 289, 290, 925] with total weight 150.
+Vehicle 70 has tasks [659, 801, 822, 137, 181, 647, 811, 915, 619, 126, 840, 725, 380, 216] with total weight 290.
+Vehicle 71 has tasks [877, 951, 572, 857, 856, 809, 707, 941, 904, 177, 222, 378, 388] with total weight 290.
+Vehicle 72 has tasks [654, 64, 729, 213, 953, 171, 824, 818, 179, 439, 443] with total weight 240.
+Vehicle 73 has tasks [550, 758, 608, 892, 57, 167, 3, 193, 938, 186, 358, 43] with total weight 250.
+Vehicle 74 has tasks [622, 41, 421, 108, 983, 573, 436, 851, 120, 456, 200, 834, 687, 817] with total weight 250.
+Vehicle 75 has tasks [95, 38, 640, 764, 245, 99, 310, 31, 335, 600] with total weight 210.
+Vehicle 76 has tasks [561, 513, 236, 559, 964, 28, 187, 519, 680, 797, 596, 105, 805] with total weight 250.
+Vehicle 77 has tasks [389, 823, 7, 116, 552, 638, 961, 33, 71, 866, 225, 160] with total weight 250.
+Vehicle 78 has tasks [733, 119, 604, 368, 84, 328, 330, 349, 611, 492] with total weight 200.
+Vehicle 79 has tasks [757, 34, 49, 134, 986, 144, 13, 392, 871, 46] with total weight 220.
+Vehicle 80 has tasks [745, 921, 690, 736, 996, 158, 691, 90, 708, 486] with total weight 160.
+Vehicle 81 has tasks [339, 664, 741, 412, 517, 734, 425, 60, 522] with total weight 190.
+Vehicle 82 has tasks [387, 992, 875, 612, 557, 740, 476, 571, 642, 626] with total weight 170.
+Vehicle 83 has tasks [267, 772, 908, 485, 583, 791, 848, 592, 355] with total weight 170.
+CVN 84 CRT 93750
