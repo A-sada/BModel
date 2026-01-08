@@ -375,17 +375,13 @@ def main():
         raise SystemExit(f"No instance files found in {args.input_dir} with pattern {args.pattern}")
 
     run_id = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    multi = len(instance_files) > 1
     for input_path in instance_files:
         instance_name = os.path.splitext(os.path.basename(input_path))[0]
-        if multi:
-            output_dir = os.path.join(args.output_dir, run_id, instance_name)
-        else:
-            output_dir = os.path.join(args.output_dir, run_id)
+        output_dir = os.path.join(args.output_dir, instance_name, run_id)
         print(f"Running {input_path} -> {output_dir}")
         run_instance(input_path, output_dir, args.steps)
 
-    print(f"Done. Outputs in {os.path.join(args.output_dir, run_id)}")
+    print(f"Done. Outputs in {args.output_dir}")
 
 
 if __name__ == "__main__":
