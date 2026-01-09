@@ -1,0 +1,2 @@
+steps 0 CVN 34 CRT 3106 n_neg 0.
+steps 1 CVN 31 CRT 3130 n_neg 20.
