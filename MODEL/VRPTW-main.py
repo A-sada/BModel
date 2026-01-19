@@ -114,7 +114,7 @@ def run_instance(input_path, output_dir, max_steps=DEFAULT_STEPS):
             task_ids = [task.id for task in vehicle.tasks]
             # ファイル名を生成
             f.write(f"Vehicle {vehicle.id} has tasks {task_ids} with total weight {vehicle.current_weight}.\n")
-        f.write(f"CVN {len(vehicles)} CRT {sum_travel_time(vehicles)}\n")
+        f.write(f"str4 CVN {len(vehicles)} CRT {sum_travel_time(vehicles)}\n")
             # if len(task_ids) == 1:
             #     count += 1
     # plot_vehicle_routes(vehicles)
