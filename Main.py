@@ -16,6 +16,15 @@ from initialsolution import *
 N=500
 
 
+def format_strategy_label(vehicles):
+    if not vehicles:
+        return "unknown"
+    labels = sorted({f"{type(vehicle).__module__}.{type(vehicle).__name__}" for vehicle in vehicles})
+    if len(labels) == 1:
+        return labels[0]
+    return ", ".join(labels)
+
+
 # ディレクトリパスを "datefile" に設定
 directoryA = './datefile'
 files = [f for f in os.listdir(directoryA) if os.path.isfile(os.path.join(directoryA, f))]
@@ -87,6 +96,7 @@ for date_text in files:
         run_num = assign_tasks_to_vehicles_with_insert(tasks, vehicles,run_num,dep_x, dep_y)
         for car in vehicles:
             car.set_balletin(bulletin_board)
+        strategy_label = format_strategy_label(vehicles)
 
 
         #車両とIDの紐付け＿辞書
@@ -99,6 +109,7 @@ for date_text in files:
         i=0
         filename = os.path.join(directory_name, f"Step-0.txt") 
         with open(filename, 'w') as f:
+            f.write(f"Strategy: {strategy_label}\n")
             for vehicle in vehicles:
                 vehicle.bulletin_update(max_xy,max_time,zones,n)
                 task_ids = [task.id for task in vehicle.tasks]
@@ -121,6 +132,7 @@ for date_text in files:
         with open(filename, 'w') as f:
             # for i in range(len(log_nego)):
                 # ファイル名を生成
+            f.write(f"Strategy: {strategy_label}\n")
             f.write(f"steps {0} CVN {log_CVN[0]} CRT {log_CRT[0]} n_neg {log_nego[0]}.\n")
         MMM = N
         for negotiate_steps in range(MMM):
@@ -354,6 +366,7 @@ for date_text in files:
                 car.step()
             filename = os.path.join(directory_name, f"step-{negotiate_steps+1}.txt")
             with open(filename, 'w') as f:
+                f.write(f"Strategy: {strategy_label}\n")
                 for vehicle in vehicles:
                     task_ids = [task.id for task in vehicle.tasks]
                     # ファイル名を生成
